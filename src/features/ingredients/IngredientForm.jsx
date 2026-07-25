@@ -1,0 +1,129 @@
+import { useEffect, useState } from 'react'
+
+const emptyForm = (categories) => ({
+  name: '',
+  quantity: '',
+  category: categories[0] ?? '',
+  expiryDate: '',
+})
+
+export function IngredientForm({
+  categories,
+  editingItem,
+  onSubmit,
+  onCancelEdit,
+}) {
+  const [form, setForm] = useState(() => emptyForm(categories))
+
+  useEffect(() => {
+    if (editingItem) {
+      setForm({
+        name: editingItem.name,
+        quantity: editingItem.quantity,
+        category: editingItem.category,
+        expiryDate: editingItem.expiryDate ?? '',
+      })
+    } else {
+      setForm(emptyForm(categories))
+    }
+  }, [editingItem])
+
+  const handleChange = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const name = form.name.trim()
+    const quantity = form.quantity.trim()
+    if (!name || !quantity) return
+
+    onSubmit({
+      name,
+      quantity,
+      category: form.category,
+      expiryDate: form.expiryDate || null,
+    })
+    if (!editingItem) setForm(emptyForm(categories))
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white shadow-sm p-4"
+    >
+      <div className="min-w-[140px] flex-1">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          이름
+        </label>
+        <input
+          type="text"
+          value={form.name}
+          onChange={handleChange('name')}
+          placeholder="예: 계란"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="w-24">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          수량
+        </label>
+        <input
+          type="text"
+          value={form.quantity}
+          onChange={handleChange('quantity')}
+          placeholder="예: 10개"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="w-40">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          유통기한
+        </label>
+        <input
+          type="date"
+          value={form.expiryDate}
+          onChange={handleChange('expiryDate')}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="w-36">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          카테고리
+        </label>
+        <select
+          value={form.category}
+          onChange={handleChange('category')}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        >
+          {editingItem ? '수정 완료' : '추가'}
+        </button>
+        {editingItem && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            취소
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}

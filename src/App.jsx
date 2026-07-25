@@ -1,0 +1,26 @@
+import { AppShell } from './AppShell'
+import { useAuth } from './features/auth/AuthContext'
+import { LoginForm } from './features/auth/LoginForm'
+import { SpaceProvider } from './features/space/SpaceContext'
+
+function App() {
+  const { loading, session } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-gray-50 text-sm text-gray-400">
+        불러오는 중…
+      </div>
+    )
+  }
+
+  if (!session) return <LoginForm />
+
+  return (
+    <SpaceProvider>
+      <AppShell />
+    </SpaceProvider>
+  )
+}
+
+export default App

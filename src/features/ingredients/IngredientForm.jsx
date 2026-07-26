@@ -44,10 +44,15 @@ export function IngredientForm({
     setForm((prev) => {
       const next = { ...prev, [field]: value }
       if (field === 'name' && !categoryTouchedRef.current) {
+        // 매칭 결과를 항상 새로 계산한다. 이전 글자에서 매칭됐던 카테고리를
+        // 그대로 남겨두면(예: "소"→소고기로 육류 매칭 후 "소금"까지 입력해도
+        // 매칭이 안 사라지고 육류가 그대로 남는 버그) 다 지운 뒤에도 엉뚱한
+        // 카테고리가 남게 된다.
         const match = findIngredientMatch(value)
-        if (match && categories.includes(match.category)) {
-          next.category = match.category
-        }
+        next.category =
+          match && categories.includes(match.category)
+            ? match.category
+            : (categories[0] ?? '')
       }
       return next
     })

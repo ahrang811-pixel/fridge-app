@@ -2,7 +2,7 @@ export function Sidebar({ tabs, activeTab, onChange, spaceName, onSignOut }) {
   return (
     <aside className="flex shrink-0 flex-col border-b border-gray-200 bg-white sm:w-56 sm:border-b-0 sm:border-r">
       <div className="px-4 py-4 sm:px-5">
-        <h1 className="text-lg font-semibold text-gray-900">🧊 냉장고 정리</h1>
+        <h1 className="text-lg font-semibold text-gray-900">🧊 공유 냉장고</h1>
         {spaceName && (
           <p className="mt-0.5 truncate text-xs text-gray-400">
             {spaceName}

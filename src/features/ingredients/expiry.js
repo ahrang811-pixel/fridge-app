@@ -1,3 +1,11 @@
+import { addDays, parseDateKey, toDateKey } from '../../utils/date-utils'
+
+export function getEstimatedExpiryDate(purchaseDate, shelfLifeDays) {
+  if (!purchaseDate || shelfLifeDays == null) return null
+
+  return toDateKey(addDays(parseDateKey(purchaseDate), shelfLifeDays))
+}
+
 export function getDaysUntilExpiry(expiryDate) {
   if (!expiryDate) return null
 

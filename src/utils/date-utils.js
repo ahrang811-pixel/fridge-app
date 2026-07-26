@@ -1,5 +1,15 @@
 export const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
+export function todayKey() {
+  return toDateKey(new Date())
+}
+
+export function addYears(date, years) {
+  const d = new Date(date)
+  d.setFullYear(d.getFullYear() + years)
+  return d
+}
+
 export function toDateKey(date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')

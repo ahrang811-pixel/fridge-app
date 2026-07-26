@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { findIngredientMatch } from './ingredientKnowledge'
+import { addYears, todayKey, toDateKey } from '../../utils/date-utils'
+
+const MAX_EXPIRY_DATE = toDateKey(addYears(new Date(), 5))
 
 const emptyForm = (categories) => ({
   name: '',
   quantity: '',
   category: categories[0] ?? '',
+  purchaseDate: todayKey(),
   expiryDate: '',
 })
 
@@ -14,13 +19,16 @@ export function IngredientForm({
   onCancelEdit,
 }) {
   const [form, setForm] = useState(() => emptyForm(categories))
+  const categoryTouchedRef = useRef(false)
 
   useEffect(() => {
+    categoryTouchedRef.current = false
     if (editingItem) {
       setForm({
         name: editingItem.name,
         quantity: editingItem.quantity,
         category: editingItem.category,
+        purchaseDate: editingItem.purchaseDate ?? '',
         expiryDate: editingItem.expiryDate ?? '',
       })
     } else {
@@ -29,7 +37,20 @@ export function IngredientForm({
   }, [editingItem])
 
   const handleChange = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }))
+    const value = e.target.value
+
+    if (field === 'category') categoryTouchedRef.current = true
+
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'name' && !categoryTouchedRef.current) {
+        const match = findIngredientMatch(value)
+        if (match && categories.includes(match.category)) {
+          next.category = match.category
+        }
+      }
+      return next
+    })
   }
 
   const handleSubmit = (e) => {
@@ -42,9 +63,13 @@ export function IngredientForm({
       name,
       quantity,
       category: form.category,
+      purchaseDate: form.purchaseDate || null,
       expiryDate: form.expiryDate || null,
     })
-    if (!editingItem) setForm(emptyForm(categories))
+    if (!editingItem) {
+      categoryTouchedRef.current = false
+      setForm(emptyForm(categories))
+    }
   }
 
   return (
@@ -80,12 +105,26 @@ export function IngredientForm({
 
       <div className="w-40">
         <label className="mb-1 block text-xs font-medium text-gray-500">
+          구매일
+        </label>
+        <input
+          type="date"
+          value={form.purchaseDate}
+          onChange={handleChange('purchaseDate')}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+      </div>
+
+      <div className="w-40">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
           유통기한
         </label>
         <input
           type="date"
           value={form.expiryDate}
           onChange={handleChange('expiryDate')}
+          min={form.purchaseDate || todayKey()}
+          max={MAX_EXPIRY_DATE}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
         />
       </div>

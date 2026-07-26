@@ -5,11 +5,11 @@ import { IngredientForm } from './IngredientForm'
 import { IngredientList } from './IngredientList'
 
 function toApp(row) {
-  return { ...row, expiryDate: row.expiry_date }
+  return { ...row, expiryDate: row.expiry_date, purchaseDate: row.purchase_date }
 }
 
-function toRow({ expiryDate, ...rest }) {
-  return { ...rest, expiry_date: expiryDate }
+function toRow({ expiryDate, purchaseDate, ...rest }) {
+  return { ...rest, expiry_date: expiryDate, purchase_date: purchaseDate }
 }
 
 export function IngredientsTab({ spaceId }) {
@@ -21,9 +21,14 @@ export function IngredientsTab({ spaceId }) {
   } = useSpaceTable('ingredients', spaceId)
   const { ingredientCategories: categories } = useSpaceSettings(spaceId)
   const [editingId, setEditingId] = useState(null)
+  const [search, setSearch] = useState('')
 
   const items = rows.map(toApp)
   const editingItem = items.find((item) => item.id === editingId) ?? null
+  const query = search.trim().toLowerCase()
+  const visibleItems = query
+    ? items.filter((item) => item.name.toLowerCase().includes(query))
+    : items
 
   const handleSubmit = async (data) => {
     if (editingId) {
@@ -44,6 +49,13 @@ export function IngredientsTab({ spaceId }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <input
+        type="search"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="🔍 식재료 이름으로 검색"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+      />
       <IngredientForm
         categories={categories}
         editingItem={editingItem}
@@ -52,7 +64,8 @@ export function IngredientsTab({ spaceId }) {
       />
       <IngredientList
         categories={categories}
-        items={items}
+        items={visibleItems}
+        isFiltered={!!query}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CategoryManager } from './CategoryManager'
+import { ChangePasswordForm } from './ChangePasswordForm'
 import { FontPicker } from './FontPicker'
 import { MealTypeSettings } from './MealTypeSettings'
 import { SpaceSettings } from './SpaceSettings'
@@ -38,6 +39,12 @@ const SECTIONS = [
     icon: '🔤',
     label: '폰트',
     description: '앱 전체에 적용할 폰트를 선택합니다.',
+  },
+  {
+    id: 'account',
+    icon: '🔒',
+    label: '계정',
+    description: '비밀번호를 변경합니다.',
   },
 ]
 
@@ -204,6 +211,8 @@ export function SettingsTab({
       {section === 'font' && (
         <FontPicker fontId={fontId} onSelect={setFontId} />
       )}
+
+      {section === 'account' && <ChangePasswordForm />}
     </div>
   )
 }

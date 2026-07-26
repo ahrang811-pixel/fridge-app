@@ -1,19 +1,36 @@
 import { useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase, setRememberMe } from '../../lib/supabaseClient'
+
+function initialRememberMe() {
+  return window.localStorage.getItem('fridge:rememberMe') !== 'false'
+}
 
 export function LoginForm() {
-  const [mode, setMode] = useState('signin')
+  const [mode, setMode] = useState('signin') // signin | signup | forgot
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMeChecked] = useState(initialRememberMe)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const resetMessages = () => {
     setError('')
     setNotice('')
+  }
+
+  const switchMode = (next) => {
+    setMode(next)
+    resetMessages()
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    resetMessages()
     setLoading(true)
+
+    setRememberMe(rememberMe)
 
     const { error: authError } =
       mode === 'signin'
@@ -32,10 +49,69 @@ export function LoginForm() {
     }
   }
 
-  const toggleMode = () => {
-    setMode((prev) => (prev === 'signin' ? 'signup' : 'signin'))
-    setError('')
-    setNotice('')
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    resetMessages()
+    setLoading(true)
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email,
+      { redirectTo: window.location.origin },
+    )
+
+    setLoading(false)
+
+    if (resetError) {
+      setError(resetError.message)
+      return
+    }
+
+    setNotice('비밀번호 재설정 링크를 이메일로 보냈어요. 메일함을 확인해주세요.')
+  }
+
+  if (mode === 'forgot') {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h1 className="mb-1 text-center text-lg font-semibold text-gray-900">
+            🧊 비밀번호 재설정
+          </h1>
+          <p className="mb-6 text-center text-sm text-gray-400">
+            가입한 이메일로 재설정 링크를 보내드려요
+          </p>
+
+          <form onSubmit={handleForgotSubmit} className="flex flex-col gap-3">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="이메일"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            />
+
+            {error && <p className="text-xs text-red-500">{error}</p>}
+            {notice && <p className="text-xs text-emerald-600">{notice}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {loading ? '보내는 중…' : '재설정 이메일 보내기'}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => switchMode('signin')}
+            className="mt-4 w-full text-center text-xs text-gray-400 hover:text-gray-600"
+          >
+            로그인으로 돌아가기
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -59,15 +135,48 @@ export function LoginForm() {
             placeholder="이메일"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
           />
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="비밀번호 (6자 이상)"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          />
+
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="비밀번호 (6자 이상)"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-emerald-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              tabIndex={-1}
+              aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? '🙈' : '👁'}
+            </button>
+          </div>
+
+          {mode === 'signin' && (
+            <div className="flex items-center justify-between text-xs">
+              <label className="flex items-center gap-1.5 text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMeChecked(e.target.checked)}
+                  className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                자동 로그인
+              </label>
+              <button
+                type="button"
+                onClick={() => switchMode('forgot')}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            </div>
+          )}
 
           {error && <p className="text-xs text-red-500">{error}</p>}
           {notice && <p className="text-xs text-emerald-600">{notice}</p>}
@@ -83,7 +192,7 @@ export function LoginForm() {
 
         <button
           type="button"
-          onClick={toggleMode}
+          onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
           className="mt-4 w-full text-center text-xs text-gray-400 hover:text-gray-600"
         >
           {mode === 'signin'

@@ -3,6 +3,7 @@ import { useSpaceTable } from '../../hooks/useSpaceTable'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { IngredientForm } from './IngredientForm'
 import { IngredientList } from './IngredientList'
+import { ReceiptScanFlow } from './receipt/ReceiptScanFlow'
 
 function toApp(row) {
   return { ...row, expiryDate: row.expiry_date, purchaseDate: row.purchase_date }
@@ -47,15 +48,24 @@ export function IngredientsTab({ spaceId }) {
     if (editingId === id) setEditingId(null)
   }
 
+  const handleImportFromReceipt = async (newItems) => {
+    for (const item of newItems) {
+      await addItem(toRow(item))
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="🔍 식재료 이름으로 검색"
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="🔍 식재료 이름으로 검색"
+          className="min-w-[160px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+        <ReceiptScanFlow categories={categories} onImportItems={handleImportFromReceipt} />
+      </div>
       <IngredientForm
         categories={categories}
         editingItem={editingItem}

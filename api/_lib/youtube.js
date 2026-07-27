@@ -2,6 +2,8 @@
 // YOUTUBE_API_KEY는 여기서만 사용되며(서버 사이드), VITE_ 접두사가 없으므로
 // 브라우저로 전달되는 빌드 결과물에는 절대 포함되지 않는다.
 const YOUTUBE_VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos'
+const YOUTUBE_COMMENT_THREADS_URL =
+  'https://www.googleapis.com/youtube/v3/commentThreads'
 
 // 사용자가 붙여넣을 수 있는 여러 유튜브 URL 형태(watch?v=, youtu.be/, shorts/,
 // embed/)에서 11자리 영상 ID를 뽑아낸다. URL이 아니라 ID를 직접 붙여넣은
@@ -36,8 +38,7 @@ export function extractVideoId(input) {
   return null
 }
 
-// 영상 제목/설명란을 가져온다.
-export async function fetchVideoSnippet(videoId) {
+function getApiKey() {
   const apiKey = process.env.YOUTUBE_API_KEY
   if (!apiKey) {
     const err = new Error(
@@ -46,6 +47,13 @@ export async function fetchVideoSnippet(videoId) {
     err.status = 500
     throw err
   }
+  return apiKey
+}
+
+// 영상 제목/설명란/채널 ID를 가져온다. channelId는 댓글 중 영상 작성자(채널
+// 운영자) 본인이 쓴 댓글을 가려내는 데 쓴다.
+export async function fetchVideoSnippet(videoId) {
+  const apiKey = getApiKey()
 
   const url = new URL(YOUTUBE_VIDEOS_URL)
   url.searchParams.set('part', 'snippet')
@@ -71,5 +79,61 @@ export async function fetchVideoSnippet(videoId) {
   return {
     title: item.snippet?.title ?? '',
     description: item.snippet?.description ?? '',
+    channelId: item.snippet?.channelId ?? null,
   }
+}
+
+// 최상위 댓글을 최대 maxResults개 가져온다. 댓글이 꺼져 있는 영상이면
+// (403 commentsDisabled) 에러 대신 빈 배열을 돌려준다 - 설명란만으로도
+// 분석은 계속 진행할 수 있어야 하므로.
+export async function fetchTopComments(videoId, { maxResults = 50 } = {}) {
+  const apiKey = getApiKey()
+
+  const url = new URL(YOUTUBE_COMMENT_THREADS_URL)
+  url.searchParams.set('part', 'snippet')
+  url.searchParams.set('videoId', videoId)
+  url.searchParams.set('maxResults', String(maxResults))
+  url.searchParams.set('order', 'relevance')
+  url.searchParams.set('textFormat', 'plainText')
+  url.searchParams.set('key', apiKey)
+
+  const response = await fetch(url)
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    const reason = data?.error?.errors?.[0]?.reason
+    if (reason === 'commentsDisabled' || reason === 'videoNotFound') {
+      return []
+    }
+    const err = new Error(data?.error?.message || 'YouTube 댓글 조회에 실패했습니다.')
+    err.status = response.status
+    throw err
+  }
+
+  const items = Array.isArray(data?.items) ? data.items : []
+  return items.map((item) => {
+    const snippet = item.snippet?.topLevelComment?.snippet ?? {}
+    return {
+      text: snippet.textDisplay ?? '',
+      likeCount: snippet.likeCount ?? 0,
+      authorChannelId: snippet.authorChannelId?.value ?? null,
+      authorDisplayName: snippet.authorDisplayName ?? '',
+    }
+  })
+}
+
+// 댓글 목록을 (1) 영상 작성자(채널 운영자)가 쓴 댓글과 (2) 좋아요가 많은 댓글로
+// 나눈다. relevance 정렬로 가져오면 고정 댓글이 보통 맨 앞에 오지만 API가
+// "고정 여부"를 공식적으로 노출하진 않으므로, 채널 ID 일치로 작성자 댓글을
+// 가려내는 방식을 쓴다.
+export function partitionComments(comments, channelId, { authorLimit = 5, topLimit = 5 } = {}) {
+  const authorComments = channelId
+    ? comments.filter((c) => c.authorChannelId === channelId).slice(0, authorLimit)
+    : []
+
+  const topComments = [...comments]
+    .sort((a, b) => b.likeCount - a.likeCount)
+    .slice(0, topLimit)
+
+  return { authorComments, topComments }
 }

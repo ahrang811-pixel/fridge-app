@@ -78,6 +78,7 @@ export function YoutubeRecipeFlow({ categories, onSaveRecipe }) {
           videoId={result.videoId}
           title={result.title}
           found={!!result.found}
+          source={result.source ?? null}
           categories={categories}
           initialName={result.found ? (result.name ?? '') : ''}
           initialCategory={

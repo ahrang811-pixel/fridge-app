@@ -1,9 +1,16 @@
 import { useState } from 'react'
 
+const SOURCE_LABELS = {
+  description: '설명란',
+  author_comment: '작성자 댓글',
+  top_comment: '인기 댓글',
+}
+
 export function YoutubeRecipeReviewModal({
   videoId,
   title,
   found,
+  source,
   categories,
   initialName,
   initialCategory,
@@ -59,11 +66,11 @@ export function YoutubeRecipeReviewModal({
 
           {found ? (
             <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-              💡 설명란에서 레시피 정보를 찾았어요. 확인하고 필요하면 수정해주세요.
+              💡 {SOURCE_LABELS[source] ?? '설명란/댓글'}에서 레시피 정보를 찾았어요. 확인하고 필요하면 수정해주세요.
             </p>
           ) : (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              📋 설명란에 레시피 정보가 없어요. 영상은 저장하고, 재료/조리법은 직접 입력해주세요.
+              📋 설명란과 댓글에 레시피 정보가 없어요. 영상은 저장하고, 재료/조리법은 직접 입력해주세요.
             </p>
           )}
 

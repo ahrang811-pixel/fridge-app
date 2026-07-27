@@ -4,7 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { callClovaOcr } from './api/_lib/clovaOcr.js'
 import { suggestRecipes } from './api/_lib/geminiRecipes.js'
-import { extractVideoId, fetchVideoSnippet } from './api/_lib/youtube.js'
+import {
+  extractVideoId,
+  fetchVideoSnippet,
+  fetchTopComments,
+  partitionComments,
+} from './api/_lib/youtube.js'
 import { extractRecipeFromVideo } from './api/_lib/geminiRecipeExtract.js'
 
 // `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
@@ -84,10 +89,15 @@ function youtubeRecipeDevMiddleware() {
           ? body.categories
           : ['기타']
 
-      const { title, description } = await fetchVideoSnippet(videoId)
+      const { title, description, channelId } = await fetchVideoSnippet(videoId)
+      const comments = await fetchTopComments(videoId)
+      const { authorComments, topComments } = partitionComments(comments, channelId)
+
       const extracted = await extractRecipeFromVideo({
         title,
         description,
+        authorComments,
+        topComments,
         categories: safeCategories,
       })
 

@@ -1,4 +1,9 @@
-import { extractVideoId, fetchVideoSnippet } from './_lib/youtube.js'
+import {
+  extractVideoId,
+  fetchVideoSnippet,
+  fetchTopComments,
+  partitionComments,
+} from './_lib/youtube.js'
 import { extractRecipeFromVideo } from './_lib/geminiRecipeExtract.js'
 
 export default async function handler(req, res) {
@@ -20,10 +25,15 @@ export default async function handler(req, res) {
     const safeCategories =
       Array.isArray(categories) && categories.length ? categories : ['기타']
 
-    const { title, description } = await fetchVideoSnippet(videoId)
+    const { title, description, channelId } = await fetchVideoSnippet(videoId)
+    const comments = await fetchTopComments(videoId)
+    const { authorComments, topComments } = partitionComments(comments, channelId)
+
     const extracted = await extractRecipeFromVideo({
       title,
       description,
+      authorComments,
+      topComments,
       categories: safeCategories,
     })
 

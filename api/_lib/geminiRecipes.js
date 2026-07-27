@@ -22,6 +22,17 @@ function buildPrompt(ingredientNames, categories) {
 }
 
 export async function suggestRecipes({ ingredientNames, categories }) {
+  // TEMP DIAGNOSTIC - check whether the incoming request body's `categories`
+  // array is already corrupted before we do anything with it.
+  console.error(
+    '[categories-diagnostic] categories=%s',
+    JSON.stringify(
+      categories.map((c) => ({
+        value: c,
+        codePoints: [...c].map((ch) => 'U+' + ch.codePointAt(0).toString(16)),
+      })),
+    ),
+  )
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     const err = new Error(

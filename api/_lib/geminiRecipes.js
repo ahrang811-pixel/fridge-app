@@ -48,8 +48,12 @@ export async function suggestRecipes({ ingredientNames, categories }) {
             items: {
               type: 'OBJECT',
               properties: {
+                // category에 responseSchema enum 제약을 걸면(한글 문자열 enum) Vercel
+                // 배포 환경에서 실제로 매번 깨진 값("ѽ" 등)이 돌아오는 문제가 있었다
+                // (로컬에서 직접 호출하면 재현되지 않아 리전/인프라에 따른 제약 디코딩
+                // 문제로 보임). enum 없이 자유 텍스트로 받고 아래에서 직접 검증한다.
                 name: { type: 'STRING' },
-                category: { type: 'STRING', enum: categories },
+                category: { type: 'STRING' },
                 ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
                 instructions: { type: 'ARRAY', items: { type: 'STRING' } },
               },
@@ -95,5 +99,24 @@ export async function suggestRecipes({ ingredientNames, categories }) {
     throw err
   }
 
-  return Array.isArray(parsed?.recipes) ? parsed.recipes : []
+  const recipes = Array.isArray(parsed?.recipes) ? parsed.recipes : []
+  return recipes.map((recipe) => ({
+    ...recipe,
+    category: normalizeCategory(recipe.category, categories),
+  }))
+}
+
+// enum 없이 받은 category가 요청한 목록과 정확히 일치하지 않을 수 있으니
+// (대소문자/공백 차이, 혹은 깨진 값) 여기서 매칭해서 항상 유효한 값으로 맞춘다.
+function normalizeCategory(rawCategory, categories) {
+  const trimmed = typeof rawCategory === 'string' ? rawCategory.trim() : ''
+  const exact = categories.find((c) => c === trimmed)
+  if (exact) return exact
+
+  const looseMatch = categories.find(
+    (c) => c.replace(/\s/g, '') === trimmed.replace(/\s/g, ''),
+  )
+  if (looseMatch) return looseMatch
+
+  return categories[0] ?? '기타'
 }

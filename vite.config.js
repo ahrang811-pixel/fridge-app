@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { callClovaOcr } from './api/_lib/clovaOcr.js'
 import { suggestRecipes } from './api/_lib/geminiRecipes.js'
+import { extractVideoId, fetchVideoSnippet } from './api/_lib/youtube.js'
+import { extractRecipeFromVideo } from './api/_lib/geminiRecipeExtract.js'
 
 // `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
 // 중에도 같은 로직을 테스트할 수 있도록 미들웨어로 재사용한다.
@@ -63,6 +65,37 @@ function geminiRecipesDevMiddleware() {
   )
 }
 
+function youtubeRecipeDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/youtube-recipe',
+    '유튜브 레시피 분석 중 오류가 발생했습니다.',
+    async (body) => {
+      const videoId = extractVideoId(body.url)
+      if (!videoId) {
+        const err = new Error(
+          '유효한 유튜브 링크가 아닙니다. 링크를 다시 확인해주세요.',
+        )
+        err.status = 400
+        throw err
+      }
+
+      const safeCategories =
+        Array.isArray(body.categories) && body.categories.length
+          ? body.categories
+          : ['기타']
+
+      const { title, description } = await fetchVideoSnippet(videoId)
+      const extracted = await extractRecipeFromVideo({
+        title,
+        description,
+        categories: safeCategories,
+      })
+
+      return { videoId, title, ...extracted }
+    },
+  )
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Vite는 VITE_ 접두사가 없는 키를 클라이언트로 노출하지 않지만, 이 config 파일
@@ -72,6 +105,7 @@ export default defineConfig(({ mode }) => {
   process.env.CLOVA_OCR_INVOKE_URL ??= env.CLOVA_OCR_INVOKE_URL
   process.env.CLOVA_OCR_SECRET ??= env.CLOVA_OCR_SECRET
   process.env.GEMINI_API_KEY ??= env.GEMINI_API_KEY
+  process.env.YOUTUBE_API_KEY ??= env.YOUTUBE_API_KEY
 
   return {
     plugins: [
@@ -79,6 +113,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       clovaOcrDevMiddleware(),
       geminiRecipesDevMiddleware(),
+      youtubeRecipeDevMiddleware(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],

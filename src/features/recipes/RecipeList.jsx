@@ -48,6 +48,17 @@ export function RecipeList({ categories, items, onEdit, onDelete }) {
 
                   {expanded && (
                     <div className="border-t border-gray-100 px-4 py-3">
+                      {item.youtube_video_id && (
+                        <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg bg-black">
+                          <iframe
+                            className="h-full w-full"
+                            src={`https://www.youtube.com/embed/${item.youtube_video_id}`}
+                            title={item.name}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )}
                       {item.ingredients && (
                         <div className="mb-3">
                           <p className="mb-1 text-xs font-semibold text-gray-500">

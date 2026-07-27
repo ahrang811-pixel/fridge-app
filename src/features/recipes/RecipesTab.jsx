@@ -4,6 +4,7 @@ import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { RecipeForm } from './RecipeForm'
 import { RecipeList } from './RecipeList'
 import { RecipeSuggestFlow } from './ai/RecipeSuggestFlow'
+import { YoutubeRecipeFlow } from './youtube/YoutubeRecipeFlow'
 
 export function RecipesTab({ spaceId }) {
   const { items, addItem, updateItem, deleteItem } = useSpaceTable(
@@ -49,6 +50,8 @@ export function RecipesTab({ spaceId }) {
         categories={categories}
         onSaveRecipe={addItem}
       />
+
+      <YoutubeRecipeFlow categories={categories} onSaveRecipe={addItem} />
 
       <RecipeForm
         categories={categories}

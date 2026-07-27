@@ -23,6 +23,14 @@ function buildPrompt(ingredientNames, categories) {
 
 export async function suggestRecipes({ ingredientNames, categories }) {
   const apiKey = process.env.GEMINI_API_KEY
+  // TEMP DIAGNOSTIC - Vercel에 실제로 전달된 GEMINI_API_KEY 값의 접두사/길이만
+  // 서버 로그에 남긴다 (응답에는 절대 포함하지 않음). 확인 후 이 블록은 제거한다.
+  console.error(
+    '[gemini-diagnostic] present=%s length=%d prefix=%s',
+    Boolean(apiKey),
+    apiKey ? apiKey.length : 0,
+    apiKey ? apiKey.slice(0, 10) : '',
+  )
   if (!apiKey) {
     const err = new Error(
       'Gemini API 환경변수가 설정되지 않았습니다 (GEMINI_API_KEY).',

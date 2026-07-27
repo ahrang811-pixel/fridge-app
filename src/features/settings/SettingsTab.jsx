@@ -152,6 +152,15 @@ export function SettingsTab({
             <span className="shrink-0 text-gray-300">›</span>
           </button>
         ))}
+
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 text-center text-xs text-gray-400 hover:text-gray-600"
+        >
+          개인정보처리방침
+        </a>
       </div>
     )
   }

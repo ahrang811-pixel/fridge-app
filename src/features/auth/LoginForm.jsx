@@ -199,6 +199,15 @@ export function LoginForm() {
             ? '계정이 없나요? 회원가입'
             : '이미 계정이 있나요? 로그인'}
         </button>
+
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 block w-full text-center text-xs text-gray-400 hover:text-gray-600"
+        >
+          개인정보처리방침
+        </a>
       </div>
     </div>
   )

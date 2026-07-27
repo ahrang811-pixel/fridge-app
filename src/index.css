@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* 포인트 컬러: emerald(청록빛 진한 초록) 대신 더 연하고 채소 같은
+   "스프링 그린" 톤으로 교체. bg-emerald, text-emerald, border-emerald 등
+   앱 전체의 기존 emerald 클래스가 자동으로 이 값을 쓰게 된다. */
+@theme {
+  --color-emerald-50: #effaf1;
+  --color-emerald-100: #d7f2dc;
+  --color-emerald-400: #63c67d;
+  --color-emerald-500: #3fae5c;
+  --color-emerald-600: #268a43;
+  --color-emerald-700: #1d7136;
+}
+
 body {
   margin: 0;
 }
@@ -10,4 +22,9 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* 전체 화면 배경에 쓰는 은은한 연두빛 그라데이션. 티 나지 않는 수준으로만. */
+.app-bg {
+  background: linear-gradient(165deg, #ffffff 0%, var(--color-emerald-50) 100%);
 }

@@ -23,7 +23,7 @@ const TABS = [
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-svh items-center justify-center bg-gray-50 text-sm text-gray-400">
+    <div className="app-bg flex min-h-svh items-center justify-center text-sm text-gray-400">
       불러오는 중…
     </div>
   )
@@ -64,7 +64,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-gray-50" style={{ fontFamily }}>
+    <div className="app-bg flex min-h-svh flex-col" style={{ fontFamily }}>
       <header className="px-4 py-4 sm:px-8">
         <h1 className="text-lg font-semibold text-gray-900">🧊 공유 냉장고</h1>
         <p className="mt-0.5 truncate text-xs text-gray-400">

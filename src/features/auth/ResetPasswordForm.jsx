@@ -31,7 +31,7 @@ export function ResetPasswordForm({ onDone }) {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-gray-50 px-4">
+    <div className="app-bg flex min-h-svh items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="mb-1 text-center text-lg font-semibold text-gray-900">
           🔒 새 비밀번호 설정

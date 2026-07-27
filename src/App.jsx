@@ -10,7 +10,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-gray-50 text-sm text-gray-400">
+      <div className="app-bg flex min-h-svh items-center justify-center text-sm text-gray-400">
         불러오는 중…
       </div>
     )

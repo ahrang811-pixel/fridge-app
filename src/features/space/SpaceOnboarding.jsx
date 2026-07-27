@@ -37,7 +37,7 @@ export function SpaceOnboarding({
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-gray-50 px-4 py-10">
+    <div className="app-bg flex min-h-svh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         {spaces.length > 0 && (
           <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">

@@ -3,15 +3,16 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { callClovaOcr } from './api/_lib/clovaOcr.js'
+import { suggestRecipes } from './api/_lib/geminiRecipes.js'
 
-// `vite dev`에는 Vercel 서버리스 함수(api/ocr-receipt.js)가 실행되지 않으므로,
-// 로컬 개발 중에도 영수증 OCR 기능을 테스트할 수 있도록 같은 로직을 미들웨어로 재사용한다.
+// `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
+// 중에도 같은 로직을 테스트할 수 있도록 미들웨어로 재사용한다.
 // 실제 배포(vite build) 결과물에는 영향이 없다 - configureServer는 dev 서버에서만 호출된다.
-function clovaOcrDevMiddleware() {
+function apiDevMiddleware(path, defaultErrorMessage, run) {
   return {
-    name: 'clova-ocr-dev-middleware',
+    name: `${path.replace(/\W/g, '-')}-dev-middleware`,
     configureServer(server) {
-      server.middlewares.use('/api/ocr-receipt', async (req, res) => {
+      server.middlewares.use(path, async (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end('Method Not Allowed')
@@ -21,21 +22,45 @@ function clovaOcrDevMiddleware() {
           const chunks = []
           for await (const chunk of req) chunks.push(chunk)
           const body = JSON.parse(Buffer.concat(chunks).toString('utf-8') || '{}')
-          const data = await callClovaOcr(body)
+          const data = await run(body)
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(data))
         } catch (err) {
           res.statusCode = err.status || 500
           res.setHeader('Content-Type', 'application/json')
           res.end(
-            JSON.stringify({
-              message: err.message || 'OCR 처리 중 오류가 발생했습니다.',
-            }),
+            JSON.stringify({ message: err.message || defaultErrorMessage }),
           )
         }
       })
     },
   }
+}
+
+function clovaOcrDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/ocr-receipt',
+    'OCR 처리 중 오류가 발생했습니다.',
+    (body) => callClovaOcr(body),
+  )
+}
+
+function geminiRecipesDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/suggest-recipes',
+    'AI 레시피 추천 중 오류가 발생했습니다.',
+    async (body) => ({
+      recipes: await suggestRecipes({
+        ingredientNames: Array.isArray(body.ingredientNames)
+          ? body.ingredientNames
+          : [],
+        categories:
+          Array.isArray(body.categories) && body.categories.length
+            ? body.categories
+            : ['기타'],
+      }),
+    }),
+  )
 }
 
 // https://vite.dev/config/
@@ -46,12 +71,14 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   process.env.CLOVA_OCR_INVOKE_URL ??= env.CLOVA_OCR_INVOKE_URL
   process.env.CLOVA_OCR_SECRET ??= env.CLOVA_OCR_SECRET
+  process.env.GEMINI_API_KEY ??= env.GEMINI_API_KEY
 
   return {
     plugins: [
       react(),
       tailwindcss(),
       clovaOcrDevMiddleware(),
+      geminiRecipesDevMiddleware(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],

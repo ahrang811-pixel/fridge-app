@@ -3,15 +3,19 @@ import { useSpaceTable } from '../../hooks/useSpaceTable'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { RecipeForm } from './RecipeForm'
 import { RecipeList } from './RecipeList'
+import { RecipeSuggestFlow } from './ai/RecipeSuggestFlow'
 
 export function RecipesTab({ spaceId }) {
   const { items, addItem, updateItem, deleteItem } = useSpaceTable(
     'recipes',
     spaceId,
   )
+  const { items: ingredientRows } = useSpaceTable('ingredients', spaceId)
   const { recipeCategories: categories } = useSpaceSettings(spaceId)
   const [editingId, setEditingId] = useState(null)
   const [search, setSearch] = useState('')
+
+  const ingredientNames = [...new Set(ingredientRows.map((row) => row.name))]
 
   const editingItem = items.find((item) => item.id === editingId) ?? null
 
@@ -40,6 +44,12 @@ export function RecipesTab({ spaceId }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <RecipeSuggestFlow
+        ingredientNames={ingredientNames}
+        categories={categories}
+        onSaveRecipe={addItem}
+      />
+
       <RecipeForm
         categories={categories}
         editingItem={editingItem}

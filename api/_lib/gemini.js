@@ -1,9 +1,11 @@
 // Google Gemini API 호출을 위한 공용 저수준 클라이언트.
 // GEMINI_API_KEY는 여기서만 사용되며(서버 사이드), VITE_ 접두사가 없으므로
 // 브라우저로 전달되는 빌드 결과물에는 절대 포함되지 않는다.
-// 버전 고정 모델명 대신 alias를 쓴다 - Google이 alias가 가리키는 실제 모델을
-// 계속 최신 안정 버전으로 옮겨주므로, 특정 버전이 단종돼도 코드 수정 없이 동작한다.
-const MODEL = 'gemini-flash-latest'
+// 'gemini-flash-latest' alias는 무료 티어 한도가 아직 낮게 풀린 최신 모델
+// (gemini-3.6-flash, 일 20건)을 가리켜서 버전을 직접 고정했다.
+// gemini-3.5-flash-lite는 분당 15회 한도가 확인됨 (표준 무료 Flash 티어 =
+// 통상 일 1,500건 수준) - alias보다 낮은 한도로 자동 전환될 위험이 없다.
+const MODEL = 'gemini-3.5-flash-lite'
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`
 
 // prompt(문자열)를 보내고 responseSchema에 맞는 JSON을 파싱해서 돌려준다.

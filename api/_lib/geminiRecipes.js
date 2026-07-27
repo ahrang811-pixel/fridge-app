@@ -22,17 +22,6 @@ function buildPrompt(ingredientNames, categories) {
 }
 
 export async function suggestRecipes({ ingredientNames, categories }) {
-  // TEMP DIAGNOSTIC - check whether the incoming request body's `categories`
-  // array is already corrupted before we do anything with it.
-  console.error(
-    '[categories-diagnostic] categories=%s',
-    JSON.stringify(
-      categories.map((c) => ({
-        value: c,
-        codePoints: [...c].map((ch) => 'U+' + ch.codePointAt(0).toString(16)),
-      })),
-    ),
-  )
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     const err = new Error(
@@ -59,10 +48,6 @@ export async function suggestRecipes({ ingredientNames, categories }) {
             items: {
               type: 'OBJECT',
               properties: {
-                // category에 responseSchema enum 제약을 걸면(한글 문자열 enum) Vercel
-                // 배포 환경에서 실제로 매번 깨진 값("ѽ" 등)이 돌아오는 문제가 있었다
-                // (로컬에서 직접 호출하면 재현되지 않아 리전/인프라에 따른 제약 디코딩
-                // 문제로 보임). enum 없이 자유 텍스트로 받고 아래에서 직접 검증한다.
                 name: { type: 'STRING' },
                 category: { type: 'STRING' },
                 ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
@@ -111,26 +96,14 @@ export async function suggestRecipes({ ingredientNames, categories }) {
   }
 
   const recipes = Array.isArray(parsed?.recipes) ? parsed.recipes : []
-  // TEMP DIAGNOSTIC - pinpoint where the category value gets corrupted.
-  if (recipes[0]) {
-    const raw = recipes[0].category
-    console.error(
-      '[category-diagnostic] raw=%s codePoints=%s textContentType=%s',
-      JSON.stringify(raw),
-      typeof raw === 'string'
-        ? [...raw].map((c) => 'U+' + c.codePointAt(0).toString(16)).join(',')
-        : 'n/a',
-      response.headers.get('content-type'),
-    )
-  }
   return recipes.map((recipe) => ({
     ...recipe,
     category: normalizeCategory(recipe.category, categories),
   }))
 }
 
-// enum 없이 받은 category가 요청한 목록과 정확히 일치하지 않을 수 있으니
-// (대소문자/공백 차이, 혹은 깨진 값) 여기서 매칭해서 항상 유효한 값으로 맞춘다.
+// category가 요청한 목록과 정확히 일치하지 않을 수 있으니(대소문자/공백 차이 등)
+// 여기서 매칭해서 항상 유효한 값으로 맞춘다.
 function normalizeCategory(rawCategory, categories) {
   const trimmed = typeof rawCategory === 'string' ? rawCategory.trim() : ''
   const exact = categories.find((c) => c === trimmed)

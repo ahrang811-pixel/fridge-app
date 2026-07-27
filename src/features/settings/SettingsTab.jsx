@@ -56,6 +56,7 @@ export function SettingsTab({
   onSwitchSpace,
   onCreateSpace,
   onJoinSpace,
+  onSignOut,
 }) {
   const [section, setSection] = useState(null)
 
@@ -212,7 +213,20 @@ export function SettingsTab({
         <FontPicker fontId={fontId} onSelect={setFontId} />
       )}
 
-      {section === 'account' && <ChangePasswordForm />}
+      {section === 'account' && (
+        <div className="flex flex-col gap-4">
+          <ChangePasswordForm />
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="self-start rounded-lg px-3 py-2 text-sm font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+            >
+              로그아웃
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

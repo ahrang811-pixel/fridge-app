@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SegmentedToggle } from '../../components/SegmentedToggle'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { CalendarView } from './CalendarView'
 import { WeeklyView } from './WeeklyView'
@@ -18,22 +19,7 @@ export function MealPlanTab({ spaceId }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-1 self-start rounded-xl border border-gray-200 bg-white shadow-sm p-1">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => setView(v.id)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              view === v.id
-                ? 'bg-emerald-600 text-white'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedToggle options={VIEWS} value={view} onChange={setView} />
 
       {view === 'week' ? (
         <WeeklyView

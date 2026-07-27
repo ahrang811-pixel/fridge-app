@@ -100,6 +100,18 @@ export async function suggestRecipes({ ingredientNames, categories }) {
   }
 
   const recipes = Array.isArray(parsed?.recipes) ? parsed.recipes : []
+  // TEMP DIAGNOSTIC - pinpoint where the category value gets corrupted.
+  if (recipes[0]) {
+    const raw = recipes[0].category
+    console.error(
+      '[category-diagnostic] raw=%s codePoints=%s textContentType=%s',
+      JSON.stringify(raw),
+      typeof raw === 'string'
+        ? [...raw].map((c) => 'U+' + c.codePointAt(0).toString(16)).join(',')
+        : 'n/a',
+      response.headers.get('content-type'),
+    )
+  }
   return recipes.map((recipe) => ({
     ...recipe,
     category: normalizeCategory(recipe.category, categories),

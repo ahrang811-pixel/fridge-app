@@ -21,7 +21,7 @@ export function SpaceProvider({ children }) {
     setLoading(true)
     const { data, error: fetchError } = await supabase
       .from('spaces')
-      .select('id, name, invite_code, created_at')
+      .select('id, name, invite_code, invite_code_expires_at, created_at')
       .order('created_at', { ascending: true })
     if (!fetchError) setSpaces(data ?? [])
     setLoading(false)
@@ -67,6 +67,34 @@ export function SpaceProvider({ children }) {
     return { data }
   }
 
+  const regenerateInviteCode = async (spaceId) => {
+    setError('')
+    const { data, error: rpcError } = await supabase.rpc(
+      'regenerate_invite_code',
+      { target_space_id: spaceId },
+    )
+    if (rpcError) {
+      setError(rpcError.message)
+      return { error: rpcError }
+    }
+    await refetchSpaces()
+    return { data }
+  }
+
+  const renameSpace = async (spaceId, name) => {
+    setError('')
+    const { data, error: rpcError } = await supabase.rpc('rename_space', {
+      target_space_id: spaceId,
+      new_name: name,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      return { error: rpcError }
+    }
+    await refetchSpaces()
+    return { data }
+  }
+
   const value = {
     spaces,
     loading,
@@ -74,6 +102,8 @@ export function SpaceProvider({ children }) {
     setActiveSpaceId,
     createSpace,
     joinSpace,
+    regenerateInviteCode,
+    renameSpace,
     error,
   }
 

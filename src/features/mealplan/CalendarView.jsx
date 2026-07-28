@@ -75,24 +75,28 @@ export function CalendarView({
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {gridDates.map((date) => {
             const key = toDateKey(date)
             const inMonth = isSameMonth(date, referenceDate)
             const selected = key === selectedKey
+            const dayMeals = mealsByDate[key] ?? {}
+            const previewEntries = mealTypes
+              .map((mt) => dayMeals[mt.id])
+              .filter((menu) => menu && menu.trim())
             return (
               <button
                 key={key}
                 type="button"
                 onClick={() => setSelectedKey(key)}
-                className={`flex min-h-11 flex-col items-center justify-center rounded-md border p-1 ${
+                className={`flex min-h-16 flex-col items-start gap-0.5 rounded-md border p-1 text-left sm:min-h-20 sm:p-1.5 ${
                   selected
                     ? 'border-emerald-500 bg-emerald-50'
                     : 'border-transparent hover:bg-gray-50'
                 } ${!inMonth ? 'opacity-40' : ''}`}
               >
                 <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-medium sm:h-6 sm:w-6 sm:text-xs ${
                     isToday(date)
                       ? 'bg-emerald-600 text-white'
                       : 'text-gray-700'
@@ -100,6 +104,21 @@ export function CalendarView({
                 >
                   {date.getDate()}
                 </span>
+                <div className="flex w-full min-w-0 flex-col gap-0.5">
+                  {previewEntries.slice(0, 2).map((menu, i) => (
+                    <span
+                      key={i}
+                      className="w-full truncate text-left text-[10px] leading-tight text-gray-500 sm:text-[11px]"
+                    >
+                      {menu}
+                    </span>
+                  ))}
+                  {previewEntries.length > 2 && (
+                    <span className="text-left text-[10px] leading-tight text-gray-400">
+                      +{previewEntries.length - 2}
+                    </span>
+                  )}
+                </div>
               </button>
             )
           })}

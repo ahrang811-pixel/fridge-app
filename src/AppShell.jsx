@@ -43,6 +43,8 @@ export function AppShell() {
     setActiveSpaceId,
     createSpace,
     joinSpace,
+    regenerateInviteCode,
+    renameSpace,
     error,
   } = useSpace()
 
@@ -83,10 +85,13 @@ export function AppShell() {
             spaceId={activeSpace.id}
             spaceName={activeSpace.name}
             inviteCode={activeSpace.invite_code}
+            inviteCodeExpiresAt={activeSpace.invite_code_expires_at}
             spaces={spaces}
             onSwitchSpace={setActiveSpaceId}
             onCreateSpace={createSpace}
             onJoinSpace={joinSpace}
+            onRegenerateInviteCode={regenerateInviteCode}
+            onRenameSpace={renameSpace}
             onSignOut={signOut}
           />
         )}

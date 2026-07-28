@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { formatWon } from '../../utils/currency'
+import { ExpenseDayCell } from './ExpenseDayCell'
 import {
   WEEKDAY_LABELS,
   addMonths,
@@ -31,17 +32,23 @@ export function ExpensesTab() {
   const goNextMonth = () => setReferenceDate(addMonths(referenceDate, 1))
   const goToday = () => setReferenceDate(new Date())
 
-  const updateExpense = (key, value) => {
-    setExpensesByDate((prev) => {
-      const amount = Number(value) || 0
-      if (amount === 0) {
-        const next = { ...prev }
-        delete next[key]
-        return next
-      }
-      return { ...prev, [key]: amount }
-    })
-  }
+  const updateExpense = useCallback(
+    (key, value) => {
+      setExpensesByDate((prev) => {
+        const amount = Number(value) || 0
+        const prevAmount = prev[key]
+        if (amount === 0) {
+          if (prevAmount === undefined) return prev
+          const next = { ...prev }
+          delete next[key]
+          return next
+        }
+        if (prevAmount === amount) return prev
+        return { ...prev, [key]: amount }
+      })
+    },
+    [setExpensesByDate],
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,8 +88,8 @@ export function ExpensesTab() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
-        <div className="grid grid-cols-7 gap-1 pb-1 text-center text-xs font-medium text-gray-400">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3 sm:p-4">
+        <div className="grid grid-cols-7 gap-1.5 pb-2 text-center text-xs font-medium text-gray-400 sm:gap-2 sm:text-sm">
           {WEEKDAY_LABELS.map((w, i) => (
             <div
               key={w}
@@ -94,30 +101,19 @@ export function ExpensesTab() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {gridDates.map((date) => {
             const key = toDateKey(date)
-            const inMonth = isSameMonth(date, referenceDate)
-            const amount = expensesByDate[key] || ''
             return (
-              <div
+              <ExpenseDayCell
                 key={key}
-                className={`flex flex-col items-center gap-1 rounded-md border p-1 ${
-                  isToday(date) ? 'border-emerald-400' : 'border-gray-100'
-                } ${!inMonth ? 'opacity-40' : ''}`}
-              >
-                <span className="text-xs font-medium text-gray-600">
-                  {date.getDate()}
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  value={amount}
-                  onChange={(e) => updateExpense(key, e.target.value)}
-                  placeholder="-"
-                  className="w-full rounded border border-gray-200 px-1 py-1 text-center text-xs focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+                day={date.getDate()}
+                dateKey={key}
+                amount={expensesByDate[key]}
+                inMonth={isSameMonth(date, referenceDate)}
+                isTodayDate={isToday(date)}
+                onCommit={updateExpense}
+              />
             )
           })}
         </div>

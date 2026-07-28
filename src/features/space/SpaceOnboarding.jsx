@@ -108,7 +108,7 @@ export function SpaceOnboarding({
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="초대 코드 (예: AB12CD)"
+                placeholder="초대 코드 (예: AB23CD45EF)"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase tracking-widest focus:border-emerald-500 focus:outline-none"
               />
               <button

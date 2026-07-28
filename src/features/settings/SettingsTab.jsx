@@ -52,10 +52,13 @@ export function SettingsTab({
   spaceId,
   spaceName,
   inviteCode,
+  inviteCodeExpiresAt,
   spaces,
   onSwitchSpace,
   onCreateSpace,
   onJoinSpace,
+  onRegenerateInviteCode,
+  onRenameSpace,
   onSignOut,
 }) {
   const [section, setSection] = useState(null)
@@ -187,10 +190,13 @@ export function SettingsTab({
           spaceId={spaceId}
           spaceName={spaceName}
           inviteCode={inviteCode}
+          inviteCodeExpiresAt={inviteCodeExpiresAt}
           spaces={spaces}
           onSwitchSpace={onSwitchSpace}
           onCreateSpace={onCreateSpace}
           onJoinSpace={onJoinSpace}
+          onRegenerateInviteCode={onRegenerateInviteCode}
+          onRenameSpace={onRenameSpace}
         />
       )}
 

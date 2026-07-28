@@ -59,6 +59,7 @@ export function SettingsTab({
   onJoinSpace,
   onRegenerateInviteCode,
   onRenameSpace,
+  onLeaveSpace,
   onSignOut,
 }) {
   const [section, setSection] = useState(null)
@@ -197,6 +198,7 @@ export function SettingsTab({
           onJoinSpace={onJoinSpace}
           onRegenerateInviteCode={onRegenerateInviteCode}
           onRenameSpace={onRenameSpace}
+          onLeaveSpace={onLeaveSpace}
         />
       )}
 

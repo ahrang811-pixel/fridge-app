@@ -95,6 +95,22 @@ export function SpaceProvider({ children }) {
     return { data }
   }
 
+  const leaveSpace = async (spaceId) => {
+    setError('')
+    const { error: rpcError } = await supabase.rpc('leave_space', {
+      target_space_id: spaceId,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      return { error: rpcError }
+    }
+    await refetchSpaces()
+    if (activeSpaceId === spaceId) {
+      setActiveSpaceId(null)
+    }
+    return {}
+  }
+
   const value = {
     spaces,
     loading,
@@ -104,6 +120,7 @@ export function SpaceProvider({ children }) {
     joinSpace,
     regenerateInviteCode,
     renameSpace,
+    leaveSpace,
     error,
   }
 

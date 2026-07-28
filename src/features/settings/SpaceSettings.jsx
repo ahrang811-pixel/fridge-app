@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SpaceMembers } from './SpaceMembers'
 
 function formatRemaining(expiresAt) {
   if (!expiresAt) return null
@@ -21,6 +22,7 @@ export function SpaceSettings({
   onJoinSpace,
   onRegenerateInviteCode,
   onRenameSpace,
+  onLeaveSpace,
 }) {
   const [copied, setCopied] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
@@ -216,6 +218,8 @@ export function SpaceSettings({
           <p className="mt-1 text-xs text-red-500">{regenerateError}</p>
         )}
       </div>
+
+      <SpaceMembers spaceId={spaceId} onLeaveSpace={onLeaveSpace} />
 
       {spaces.length > 1 && (
         <div className="rounded-xl border border-gray-200 bg-white p-2 shadow-sm">

@@ -45,6 +45,7 @@ export function AppShell() {
     joinSpace,
     regenerateInviteCode,
     renameSpace,
+    leaveSpace,
     error,
   } = useSpace()
 
@@ -92,6 +93,7 @@ export function AppShell() {
             onJoinSpace={joinSpace}
             onRegenerateInviteCode={regenerateInviteCode}
             onRenameSpace={renameSpace}
+            onLeaveSpace={leaveSpace}
             onSignOut={signOut}
           />
         )}

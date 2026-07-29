@@ -117,6 +117,12 @@ export function LoginForm() {
   return (
     <div className="app-bg flex min-h-svh items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <a
+          href="/"
+          className="mb-3 inline-block text-xs font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          ← 소개 페이지로
+        </a>
         <h1 className="mb-1 text-center text-lg font-semibold text-gray-900">
           🧊 공유 냉장고
         </h1>

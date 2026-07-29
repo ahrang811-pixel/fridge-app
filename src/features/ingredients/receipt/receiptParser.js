@@ -82,6 +82,39 @@ function nextId() {
   return `receipt-${Date.now()}-${idSeq}`
 }
 
+// 영수증 총액이 보통 담기는 줄의 키워드. 우선순위 순서대로 찾는다.
+const TOTAL_KEYWORDS = ['합계', '총액', '결제금액', '받을금액', '판매금액']
+
+function parseAmountToken(token) {
+  const digits = token.replace(/[^\d]/g, '')
+  if (!digits) return null
+  const amount = Number(digits)
+  return Number.isFinite(amount) && amount > 0 ? amount : null
+}
+
+// OCR 결과에서 "합계/총액" 등이 포함된 줄을 찾아 그 줄의 마지막 숫자 토큰을
+// 금액으로 추정한다. 정확한 금액 인식은 보장할 수 없으므로 호출 쪽에서
+// 사용자가 확인/수정할 수 있게 해야 한다.
+export function extractReceiptTotal(ocrResponse) {
+  const fields = ocrResponse?.images?.[0]?.fields ?? []
+  const lines = fieldsToLines(fields)
+
+  for (const keyword of TOTAL_KEYWORDS) {
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line.includes(keyword)) continue
+
+      const tokens = line.split(/\s+/)
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        const amount = parseAmountToken(tokens[i])
+        if (amount) return amount
+      }
+    }
+  }
+
+  return null
+}
+
 // OCR 응답에서 식재료로 보이는 줄을 뽑아 검토용 후보 목록을 만든다.
 // fallbackCategory는 알려진 식재료와 매칭되지 않았을 때 사용할 기본 카테고리다.
 export function extractCandidates(ocrResponse, fallbackCategory) {

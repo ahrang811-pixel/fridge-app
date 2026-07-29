@@ -11,6 +11,8 @@ import {
   partitionComments,
 } from './api/_lib/youtube.js'
 import { extractRecipeFromVideo } from './api/_lib/geminiRecipeExtract.js'
+import { enforceDailyLimit } from './api/_lib/usageLimiter.js'
+import { runExpiryCheck } from './api/_lib/expiryCheck.js'
 
 // `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
 // 중에도 같은 로직을 테스트할 수 있도록 미들웨어로 재사용한다.
@@ -29,7 +31,7 @@ function apiDevMiddleware(path, defaultErrorMessage, run) {
           const chunks = []
           for await (const chunk of req) chunks.push(chunk)
           const body = JSON.parse(Buffer.concat(chunks).toString('utf-8') || '{}')
-          const data = await run(body)
+          const data = await run(body, req)
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(data))
         } catch (err) {
@@ -56,17 +58,23 @@ function geminiRecipesDevMiddleware() {
   return apiDevMiddleware(
     '/api/suggest-recipes',
     'AI 레시피 추천 중 오류가 발생했습니다.',
-    async (body) => ({
-      recipes: await suggestRecipes({
-        ingredientNames: Array.isArray(body.ingredientNames)
-          ? body.ingredientNames
-          : [],
-        categories:
-          Array.isArray(body.categories) && body.categories.length
-            ? body.categories
-            : ['기타'],
-      }),
-    }),
+    async (body, req) => {
+      await enforceDailyLimit(req, 'recipe_suggest')
+      return {
+        recipes: await suggestRecipes({
+          ingredientNames: Array.isArray(body.ingredientNames)
+            ? body.ingredientNames
+            : [],
+          categories:
+            Array.isArray(body.categories) && body.categories.length
+              ? body.categories
+              : ['기타'],
+          urgentIngredientNames: Array.isArray(body.urgentIngredientNames)
+            ? body.urgentIngredientNames
+            : [],
+        }),
+      }
+    },
   )
 }
 
@@ -74,7 +82,9 @@ function youtubeRecipeDevMiddleware() {
   return apiDevMiddleware(
     '/api/youtube-recipe',
     '유튜브 레시피 분석 중 오류가 발생했습니다.',
-    async (body) => {
+    async (body, req) => {
+      await enforceDailyLimit(req, 'youtube_recipe')
+
       const videoId = extractVideoId(body.url)
       if (!videoId) {
         const err = new Error(
@@ -106,6 +116,31 @@ function youtubeRecipeDevMiddleware() {
   )
 }
 
+// 로컬에서 유통기한 임박 알림 크론 로직을 수동으로 확인해볼 수 있도록 하는
+// 개발 전용 엔드포인트. 실제 배포본(vercel.json의 crons)에는 영향이 없다.
+function expiryCheckDevMiddleware() {
+  return {
+    name: 'expiry-check-dev-middleware',
+    configureServer(server) {
+      server.middlewares.use('/api/cron/check-expiry', async (req, res) => {
+        try {
+          const data = await runExpiryCheck()
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(data))
+        } catch (err) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            JSON.stringify({
+              message: err.message || '유통기한 확인 중 오류가 발생했습니다.',
+            }),
+          )
+        }
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Vite는 VITE_ 접두사가 없는 키를 클라이언트로 노출하지 않지만, 이 config 파일
@@ -116,6 +151,11 @@ export default defineConfig(({ mode }) => {
   process.env.CLOVA_OCR_SECRET ??= env.CLOVA_OCR_SECRET
   process.env.GEMINI_API_KEY ??= env.GEMINI_API_KEY
   process.env.YOUTUBE_API_KEY ??= env.YOUTUBE_API_KEY
+  process.env.VITE_SUPABASE_URL ??= env.VITE_SUPABASE_URL
+  process.env.VITE_SUPABASE_ANON_KEY ??= env.VITE_SUPABASE_ANON_KEY
+  process.env.VITE_VAPID_PUBLIC_KEY ??= env.VITE_VAPID_PUBLIC_KEY
+  process.env.VAPID_PRIVATE_KEY ??= env.VAPID_PRIVATE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??= env.SUPABASE_SERVICE_ROLE_KEY
 
   return {
     plugins: [
@@ -124,8 +164,22 @@ export default defineConfig(({ mode }) => {
       clovaOcrDevMiddleware(),
       geminiRecipesDevMiddleware(),
       youtubeRecipeDevMiddleware(),
+      expiryCheckDevMiddleware(),
       VitePWA({
         registerType: 'autoUpdate',
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.js',
+        injectManifest: {
+          globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        },
+        // 기본값(false)이면 `vite dev`에서는 서비스워커가 전혀 등록되지 않아
+        // navigator.serviceWorker.ready가 영원히 resolve되지 않는다.
+        // (알림 구독 등 SW에 의존하는 기능을 로컬에서 테스트하려면 필요)
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: '공유 냉장고',

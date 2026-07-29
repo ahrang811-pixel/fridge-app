@@ -1,4 +1,5 @@
 import { suggestRecipes } from './_lib/geminiRecipes.js'
+import { enforceDailyLimit } from './_lib/usageLimiter.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,11 +8,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { ingredientNames, categories } = req.body ?? {}
+    await enforceDailyLimit(req, 'recipe_suggest')
+
+    const { ingredientNames, categories, urgentIngredientNames } =
+      req.body ?? {}
     const recipes = await suggestRecipes({
       ingredientNames: Array.isArray(ingredientNames) ? ingredientNames : [],
       categories:
         Array.isArray(categories) && categories.length ? categories : ['기타'],
+      urgentIngredientNames: Array.isArray(urgentIngredientNames)
+        ? urgentIngredientNames
+        : [],
     })
     res.status(200).json({ recipes })
   } catch (err) {

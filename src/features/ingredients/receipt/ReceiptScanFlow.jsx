@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { todayKey } from '../../../utils/date-utils'
+import { addExpenseAmount } from '../../expenses/expenseStore'
 import { ReceiptReviewModal } from './ReceiptReviewModal'
-import { extractCandidates } from './receiptParser'
+import { extractCandidates, extractReceiptTotal } from './receiptParser'
 import { recognizeReceipt } from './receiptOcr'
 
 // 상태: idle(버튼만) -> loading(인식 중) -> review(검토 모달) -> saving(일괄 추가 중)
@@ -9,6 +10,9 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
   const [status, setStatus] = useState('idle')
   const [candidates, setCandidates] = useState([])
   const [error, setError] = useState(null)
+  const [expenseAmount, setExpenseAmount] = useState('')
+  const [expenseEnabled, setExpenseEnabled] = useState(false)
+  const [expenseDetected, setExpenseDetected] = useState(false)
   const inputRef = useRef(null)
 
   const handlePick = () => inputRef.current?.click()
@@ -28,7 +32,11 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
         setStatus('idle')
         return
       }
+      const total = extractReceiptTotal(ocrResult)
       setCandidates(found)
+      setExpenseAmount(total ? String(total) : '')
+      setExpenseEnabled(!!total)
+      setExpenseDetected(!!total)
       setStatus('review')
     } catch (err) {
       setError(err.message || '영수증 인식 중 오류가 발생했습니다.')
@@ -54,6 +62,9 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
     setStatus('idle')
     setCandidates([])
     setError(null)
+    setExpenseAmount('')
+    setExpenseEnabled(false)
+    setExpenseDetected(false)
   }
 
   const handleConfirm = async () => {
@@ -71,8 +82,14 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
     setStatus('saving')
     try {
       await onImportItems(selected)
+      if (expenseEnabled) {
+        addExpenseAmount(todayKey(), Number(expenseAmount))
+      }
       setStatus('idle')
       setCandidates([])
+      setExpenseAmount('')
+      setExpenseEnabled(false)
+      setExpenseDetected(false)
     } catch (err) {
       setError(err.message || '식재료 추가 중 오류가 발생했습니다.')
       setStatus('review')
@@ -111,6 +128,11 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
           onToggleAll={toggleAll}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
+          expenseAmount={expenseAmount}
+          expenseEnabled={expenseEnabled}
+          expenseDetected={expenseDetected}
+          onExpenseAmountChange={setExpenseAmount}
+          onExpenseEnabledChange={setExpenseEnabled}
         />
       )}
 
@@ -123,6 +145,11 @@ export function ReceiptScanFlow({ categories, onImportItems }) {
           onRemove={() => {}}
           onToggleAll={() => {}}
           onConfirm={() => {}}
+          expenseAmount={expenseAmount}
+          expenseEnabled={expenseEnabled}
+          expenseDetected={expenseDetected}
+          onExpenseAmountChange={() => {}}
+          onExpenseEnabledChange={() => {}}
           onCancel={() => {}}
         />
       )}

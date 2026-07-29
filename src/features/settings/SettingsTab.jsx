@@ -5,6 +5,7 @@ import { CategoryManager } from './CategoryManager'
 import { ChangePasswordForm } from './ChangePasswordForm'
 import { FontPicker } from './FontPicker'
 import { MealTypeSettings } from './MealTypeSettings'
+import { NotificationSettings } from './NotificationSettings'
 import { SpaceSettings } from './SpaceSettings'
 import { useSpaceSettings } from './useSpaceSettings'
 import { DEFAULT_FONT_ID, FALLBACK_CATEGORY, SETTINGS_KEYS } from './defaults'
@@ -39,6 +40,12 @@ const SECTIONS = [
     icon: '🔤',
     label: '폰트',
     description: '앱 전체에 적용할 폰트를 선택합니다.',
+  },
+  {
+    id: 'notifications',
+    icon: '🔔',
+    label: '알림',
+    description: '유통기한 임박 알림을 관리합니다.',
   },
   {
     id: 'account',
@@ -229,6 +236,8 @@ export function SettingsTab({
       {section === 'font' && (
         <FontPicker fontId={fontId} onSelect={setFontId} />
       )}
+
+      {section === 'notifications' && <NotificationSettings />}
 
       {section === 'account' && (
         <div className="flex flex-col gap-4">

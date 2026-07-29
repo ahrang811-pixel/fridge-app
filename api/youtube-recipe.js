@@ -5,6 +5,7 @@ import {
   partitionComments,
 } from './_lib/youtube.js'
 import { extractRecipeFromVideo } from './_lib/geminiRecipeExtract.js'
+import { enforceDailyLimit } from './_lib/usageLimiter.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,6 +14,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    await enforceDailyLimit(req, 'youtube_recipe')
+
     const { url, categories } = req.body ?? {}
     const videoId = extractVideoId(url)
     if (!videoId) {

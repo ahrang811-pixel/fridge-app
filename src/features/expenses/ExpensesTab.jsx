@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { formatWon } from '../../utils/currency'
+import { EXPENSES_KEY } from './expenseStore'
 import { ExpenseDayCell } from './ExpenseDayCell'
 import {
   WEEKDAY_LABELS,
@@ -13,10 +14,7 @@ import {
 } from '../../utils/date-utils'
 
 export function ExpensesTab() {
-  const [expensesByDate, setExpensesByDate] = useLocalStorage(
-    'fridge:expenses',
-    {},
-  )
+  const [expensesByDate, setExpensesByDate] = useLocalStorage(EXPENSES_KEY, {})
   const [referenceDate, setReferenceDate] = useState(() => new Date())
 
   const gridDates = getMonthGridDates(referenceDate)

@@ -7,6 +7,11 @@ export function ReceiptReviewModal({
   onToggleAll,
   onConfirm,
   onCancel,
+  expenseAmount,
+  expenseEnabled,
+  expenseDetected,
+  onExpenseAmountChange,
+  onExpenseEnabledChange,
 }) {
   const checkedCount = candidates.filter((c) => c.checked).length
   const allChecked = candidates.length > 0 && checkedCount === candidates.length
@@ -108,6 +113,36 @@ export function ReceiptReviewModal({
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 px-5 py-3">
+          <label className="flex items-center gap-2 text-xs text-gray-500">
+            <input
+              type="checkbox"
+              checked={expenseEnabled}
+              disabled={saving}
+              onChange={(e) => onExpenseEnabledChange(e.target.checked)}
+            />
+            오늘 식비로 자동 등록
+            {expenseDetected && (
+              <span className="text-emerald-600">(영수증에서 인식됨)</span>
+            )}
+          </label>
+          {expenseEnabled && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={expenseAmount}
+                disabled={saving}
+                onChange={(e) => onExpenseAmountChange(e.target.value)}
+                placeholder="금액"
+                className="w-32 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+              />
+              <span className="text-sm text-gray-500">원</span>
+            </div>
           )}
         </div>
 

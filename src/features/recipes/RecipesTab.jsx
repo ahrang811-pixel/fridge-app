@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSpaceTable } from '../../hooks/useSpaceTable'
+import { getDaysUntilExpiry, getExpiryStatus } from '../ingredients/expiry'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { RecipeForm } from './RecipeForm'
 import { RecipeList } from './RecipeList'
@@ -17,6 +18,15 @@ export function RecipesTab({ spaceId }) {
   const [search, setSearch] = useState('')
 
   const ingredientNames = [...new Set(ingredientRows.map((row) => row.name))]
+  const urgentIngredientNames = [
+    ...new Set(
+      ingredientRows
+        .filter(
+          (row) => getExpiryStatus(getDaysUntilExpiry(row.expiry_date)) === 'urgent',
+        )
+        .map((row) => row.name),
+    ),
+  ]
 
   const editingItem = items.find((item) => item.id === editingId) ?? null
 
@@ -47,6 +57,7 @@ export function RecipesTab({ spaceId }) {
     <div className="flex flex-col gap-6">
       <RecipeSuggestFlow
         ingredientNames={ingredientNames}
+        urgentIngredientNames={urgentIngredientNames}
         categories={categories}
         onSaveRecipe={addItem}
       />

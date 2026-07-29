@@ -41,3 +41,14 @@ const authStorage = {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: { storage: authStorage },
 })
+
+// 서버리스 함수(api/*.js)가 요청자를 식별해야 할 때(예: 하루 사용 한도 체크)
+// 붙이는 Authorization 헤더. 로그인 상태가 아니면 빈 객체를 반환한다.
+export async function getAuthHeader() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.access_token
+    ? { Authorization: `Bearer ${session.access_token}` }
+    : {}
+}

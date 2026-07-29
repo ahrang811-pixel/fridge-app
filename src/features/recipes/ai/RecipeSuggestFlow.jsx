@@ -3,7 +3,12 @@ import { fetchRecipeSuggestions } from './recipeSuggestClient'
 import { toRecipeRow } from './recipeSuggestUtils'
 
 // 상태: idle(버튼만) -> loading(추천 요청 중) -> results(추천 목록 표시)
-export function RecipeSuggestFlow({ ingredientNames, categories, onSaveRecipe }) {
+export function RecipeSuggestFlow({
+  ingredientNames,
+  urgentIngredientNames = [],
+  categories,
+  onSaveRecipe,
+}) {
   const [status, setStatus] = useState('idle')
   const [recipes, setRecipes] = useState([])
   const [error, setError] = useState(null)
@@ -15,7 +20,11 @@ export function RecipeSuggestFlow({ ingredientNames, categories, onSaveRecipe })
     setError(null)
     setStatus('loading')
     try {
-      const result = await fetchRecipeSuggestions({ ingredientNames, categories })
+      const result = await fetchRecipeSuggestions({
+        ingredientNames,
+        categories,
+        urgentIngredientNames,
+      })
       if (result.length === 0) {
         setError('추천할 레시피를 찾지 못했습니다. 잠시 후 다시 시도해보세요.')
         setStatus('idle')
@@ -57,6 +66,13 @@ export function RecipeSuggestFlow({ ingredientNames, categories, onSaveRecipe })
           </span>
         )}
       </div>
+
+      {urgentIngredientNames.length > 0 && (
+        <p className="text-xs text-amber-600">
+          ⏰ 유통기한 임박: {urgentIngredientNames.join(', ')} — 이 재료를
+          우선 활용하는 레시피를 추천해드려요.
+        </p>
+      )}
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 

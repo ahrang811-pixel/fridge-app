@@ -1,0 +1,18 @@
+name: Check expiring ingredients
+
+# Vercel Hobby 플랜은 하루 1회를 넘는 Cron을 지원하지 않아서, 사용자가
+# 시간을 선택할 수 있는 유통기한 알림 기능을 매시간 정확히 확인하려면
+# GitHub Actions의 무료 scheduled workflow를 대신 사용한다.
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/check-expiry
+        run: |
+          curl -sf -X GET "https://fridge-app-lake.vercel.app/api/cron/check-expiry" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

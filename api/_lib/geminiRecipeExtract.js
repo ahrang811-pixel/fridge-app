@@ -79,3 +79,55 @@ export async function extractRecipeFromVideo({
     source: typeof parsed.source === 'string' ? parsed.source : null,
   }
 }
+
+function buildCaptionPrompt({ caption, categories }) {
+  return [
+    '아래는 인스타그램 게시물의 캡션(본문) 글이야.',
+    '이 안에 재료 목록이나 조리법(레시피) 정보가 실제로 들어있는지 판단해줘.',
+    '해시태그, 계정 홍보, 감사 인사, 다른 게시물 안내만 있고',
+    '재료/조리법이 없으면 없는 것으로 판단해줘 (found: false).',
+    '',
+    '캡션:',
+    caption,
+    '',
+    '레시피 정보가 있으면 found를 true로 하고 다음을 채워줘:',
+    '- name: 요리 이름',
+    `- category: 반드시 다음 중 하나로: ${categories.join(', ')}`,
+    '- ingredients: 재료 목록 (배열, 각 항목은 "이름 수량" 형태로 간결하게)',
+    '- instructions: 조리 순서 (배열, 각 항목은 한 단계)',
+    '원문에 있는 내용만 사용하고, 없는 재료나 단계를 지어내지 마.',
+    '모든 응답은 한국어로 작성해줘.',
+  ].join('\n')
+}
+
+// 인스타그램 게시물 캡션 텍스트에서 레시피 정보를 뽑아낸다.
+// 반환값: { found: false } 또는
+//         { found: true, name, category, ingredients: string[], instructions: string[] }
+export async function extractRecipeFromCaption({ caption, categories }) {
+  const parsed = await callGemini({
+    prompt: buildCaptionPrompt({ caption, categories }),
+    schema: {
+      type: 'OBJECT',
+      properties: {
+        found: { type: 'BOOLEAN' },
+        name: { type: 'STRING' },
+        category: { type: 'STRING' },
+        ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
+        instructions: { type: 'ARRAY', items: { type: 'STRING' } },
+      },
+      required: ['found'],
+    },
+  })
+
+  if (!parsed?.found) {
+    return { found: false }
+  }
+
+  return {
+    found: true,
+    name: typeof parsed.name === 'string' ? parsed.name : '',
+    category: normalizeCategory(parsed.category, categories),
+    ingredients: Array.isArray(parsed.ingredients) ? parsed.ingredients : [],
+    instructions: Array.isArray(parsed.instructions) ? parsed.instructions : [],
+  }
+}

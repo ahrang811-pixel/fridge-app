@@ -9,6 +9,7 @@ export function LoginForm() {
   const [mode, setMode] = useState('signin') // signin | signup | forgot
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMeChecked] = useState(initialRememberMe)
   const [error, setError] = useState('')
@@ -22,12 +23,19 @@ export function LoginForm() {
 
   const switchMode = (next) => {
     setMode(next)
+    setConfirmPassword('')
     resetMessages()
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     resetMessages()
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.')
+      return
+    }
+
     setLoading(true)
 
     setRememberMe(rememberMe)
@@ -35,7 +43,11 @@ export function LoginForm() {
     const { error: authError } =
       mode === 'signin'
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: window.location.origin },
+          })
 
     setLoading(false)
 
@@ -162,6 +174,18 @@ export function LoginForm() {
               {showPassword ? '🙈' : '👁'}
             </button>
           </div>
+
+          {mode === 'signup' && (
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required
+              minLength={6}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="비밀번호 확인"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            />
+          )}
 
           {mode === 'signin' && (
             <div className="flex items-center justify-between text-xs">

@@ -59,6 +59,16 @@ export function RecipeList({ categories, items, onEdit, onDelete }) {
                           />
                         </div>
                       )}
+                      {item.instagram_url && (
+                        <a
+                          href={item.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mb-3 inline-block text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                        >
+                          📸 인스타그램에서 보기 →
+                        </a>
+                      )}
                       {item.ingredients && (
                         <div className="mb-3">
                           <p className="mb-1 text-xs font-semibold text-gray-500">

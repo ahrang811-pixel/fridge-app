@@ -5,6 +5,7 @@ import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { RecipeForm } from './RecipeForm'
 import { RecipeList } from './RecipeList'
 import { RecipeSuggestFlow } from './ai/RecipeSuggestFlow'
+import { InstagramRecipeFlow } from './instagram/InstagramRecipeFlow'
 import { YoutubeRecipeFlow } from './youtube/YoutubeRecipeFlow'
 
 export function RecipesTab({ spaceId }) {
@@ -63,6 +64,8 @@ export function RecipesTab({ spaceId }) {
       />
 
       <YoutubeRecipeFlow categories={categories} onSaveRecipe={addItem} />
+
+      <InstagramRecipeFlow categories={categories} onSaveRecipe={addItem} />
 
       <RecipeForm
         categories={categories}

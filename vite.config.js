@@ -10,11 +10,13 @@ import {
   fetchTopComments,
   partitionComments,
 } from './api/_lib/youtube.js'
-import { extractRecipeFromVideo } from './api/_lib/geminiRecipeExtract.js'
+import { extractRecipeFromVideo, extractRecipeFromCaption } from './api/_lib/geminiRecipeExtract.js'
+import { fetchInstagramCaption, isInstagramPostUrl } from './api/_lib/instagram.js'
 import { enforceDailyLimit } from './api/_lib/usageLimiter.js'
 import { runExpiryCheck } from './api/_lib/expiryCheck.js'
 import { getOrCreateIngredientImageUrl } from './api/_lib/ingredientImageService.js'
 import { getOrCreateIngredientFacts } from './api/_lib/ingredientFactsService.js'
+import { deleteAccountByToken } from './api/_lib/deleteAccountService.js'
 
 // `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
 // 중에도 같은 로직을 테스트할 수 있도록 미들웨어로 재사용한다.
@@ -118,6 +120,47 @@ function youtubeRecipeDevMiddleware() {
   )
 }
 
+function instagramRecipeDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/instagram-recipe',
+    '인스타그램 레시피 분석 중 오류가 발생했습니다.',
+    async (body, req) => {
+      const safeCategories =
+        Array.isArray(body.categories) && body.categories.length
+          ? body.categories
+          : ['기타']
+
+      let captionText = typeof body.caption === 'string' ? body.caption.trim() : ''
+
+      if (!captionText) {
+        const trimmedUrl = typeof body.url === 'string' ? body.url.trim() : ''
+        if (!isInstagramPostUrl(trimmedUrl)) {
+          const err = new Error(
+            '유효한 인스타그램 게시물 링크가 아닙니다. 링크를 다시 확인해주세요.',
+          )
+          err.status = 400
+          throw err
+        }
+
+        const fetched = await fetchInstagramCaption(trimmedUrl)
+        if (!fetched) {
+          return { fetched: false }
+        }
+        captionText = fetched
+      }
+
+      await enforceDailyLimit(req, 'instagram_recipe')
+
+      const extracted = await extractRecipeFromCaption({
+        caption: captionText,
+        categories: safeCategories,
+      })
+
+      return { fetched: true, caption: captionText, ...extracted }
+    },
+  )
+}
+
 function ingredientImageDevMiddleware() {
   return apiDevMiddleware(
     '/api/ingredient-image',
@@ -147,6 +190,23 @@ function ingredientFactsDevMiddleware() {
         throw err
       }
       return getOrCreateIngredientFacts(name, category, req)
+    },
+  )
+}
+
+function getBearerToken(req) {
+  const header = req.headers?.authorization || req.headers?.Authorization
+  if (!header || !header.startsWith('Bearer ')) return null
+  return header.slice('Bearer '.length)
+}
+
+function deleteAccountDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/delete-account',
+    '회원탈퇴 처리 중 오류가 발생했습니다.',
+    async (_body, req) => {
+      await deleteAccountByToken(getBearerToken(req))
+      return { ok: true }
     },
   )
 }
@@ -199,8 +259,10 @@ export default defineConfig(({ mode }) => {
       clovaOcrDevMiddleware(),
       geminiRecipesDevMiddleware(),
       youtubeRecipeDevMiddleware(),
+      instagramRecipeDevMiddleware(),
       ingredientImageDevMiddleware(),
       ingredientFactsDevMiddleware(),
+      deleteAccountDevMiddleware(),
       expiryCheckDevMiddleware(),
       VitePWA({
         registerType: 'autoUpdate',

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BottomTabBar } from './components/BottomTabBar'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useAuth } from './features/auth/AuthContext'
+import { OnboardingTutorial } from './features/onboarding/OnboardingTutorial'
 import { useSpace } from './features/space/SpaceContext'
 import { SpaceOnboarding } from './features/space/SpaceOnboarding'
 import { InventoryTab } from './features/inventory/InventoryTab'
@@ -68,6 +69,7 @@ export function AppShell() {
 
   return (
     <div className="app-bg flex min-h-svh flex-col" style={{ fontFamily }}>
+      <OnboardingTutorial />
       <header className="px-4 py-4 sm:px-8">
         <h1 className="text-lg font-semibold text-gray-900">🧊 공유 냉장고</h1>
         <p className="mt-0.5 truncate text-xs text-gray-400">

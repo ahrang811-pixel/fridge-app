@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CategoryManager } from './CategoryManager'
 import { ChangePasswordForm } from './ChangePasswordForm'
+import { DeleteAccountSection } from './DeleteAccountSection'
 import { FontPicker } from './FontPicker'
 import { MealTypeSettings } from './MealTypeSettings'
 import { NotificationSettings } from './NotificationSettings'
@@ -51,7 +52,7 @@ const SECTIONS = [
     id: 'account',
     icon: '🔒',
     label: '계정',
-    description: '비밀번호를 변경합니다.',
+    description: '비밀번호를 변경하거나 회원탈퇴를 할 수 있습니다.',
   },
 ]
 
@@ -242,6 +243,7 @@ export function SettingsTab({
       {section === 'account' && (
         <div className="flex flex-col gap-4">
           <ChangePasswordForm />
+          <DeleteAccountSection />
           {onSignOut && (
             <button
               type="button"

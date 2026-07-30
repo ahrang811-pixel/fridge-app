@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const DAILY_LIMITS = {
   recipe_suggest: 10,
   youtube_recipe: 10,
+  instagram_recipe: 10,
   ingredient_image: 30,
   ingredient_facts: 30,
 }

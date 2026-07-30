@@ -63,3 +63,23 @@ export const FALLBACK_CATEGORY_DEFAULT = {
 export function getCategoryDefault(category) {
   return CATEGORY_DEFAULTS[category] ?? FALLBACK_CATEGORY_DEFAULT
 }
+
+// AI 일러스트가 아직 없을 때 카드에 임시로 보여줄 카테고리 기본 아이콘.
+const CATEGORY_ICONS = {
+  채소: '🥬',
+  과일: '🍎',
+  육류: '🥩',
+  수산물: '🐟',
+  유제품: '🧀',
+  '곡류/가공식품': '🍚',
+  '소스/양념': '🧂',
+  냉동식품: '🧊',
+  음료: '🥤',
+  기타: '🥫',
+}
+
+const FALLBACK_CATEGORY_ICON = '🥫'
+
+export function getCategoryIcon(category) {
+  return CATEGORY_ICONS[category] ?? FALLBACK_CATEGORY_ICON
+}

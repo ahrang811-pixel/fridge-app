@@ -1,3 +1,6 @@
+import { CoupangSearchButton } from '../../components/CoupangSearchButton'
+import { COUPANG_PARTNERS_DISCLOSURE } from '../../utils/affiliateLink'
+
 export function ShoppingList({ items, onToggle, onDelete }) {
   if (items.length === 0) {
     return (
@@ -12,6 +15,7 @@ export function ShoppingList({ items, onToggle, onDelete }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <p className="text-[11px] text-gray-400">{COUPANG_PARTNERS_DISCLOSURE}</p>
       <div>
         <h3 className="mb-2 text-sm font-semibold text-gray-500">
           담아야 할 항목 <span className="text-gray-400">({pending.length})</span>
@@ -76,6 +80,7 @@ function ShoppingRow({ item, onToggle, onDelete }) {
           <p className="text-xs text-gray-400">{item.quantity}</p>
         )}
       </div>
+      <CoupangSearchButton keyword={item.name} />
       <button
         type="button"
         onClick={() => onDelete(item.id)}

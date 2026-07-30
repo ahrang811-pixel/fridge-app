@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 const DAILY_LIMITS = {
   recipe_suggest: 10,
   youtube_recipe: 10,
+  ingredient_image: 30,
+  ingredient_facts: 30,
 }
 
 const LIMIT_MESSAGE = '오늘은 한도를 다 쓰셨어요, 내일 다시 시도해주세요.'

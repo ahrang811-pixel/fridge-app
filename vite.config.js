@@ -13,6 +13,8 @@ import {
 import { extractRecipeFromVideo } from './api/_lib/geminiRecipeExtract.js'
 import { enforceDailyLimit } from './api/_lib/usageLimiter.js'
 import { runExpiryCheck } from './api/_lib/expiryCheck.js'
+import { getOrCreateIngredientImageUrl } from './api/_lib/ingredientImageService.js'
+import { getOrCreateIngredientFacts } from './api/_lib/ingredientFactsService.js'
 
 // `vite dev`에는 Vercel 서버리스 함수(api/*.js)가 실행되지 않으므로, 로컬 개발
 // 중에도 같은 로직을 테스트할 수 있도록 미들웨어로 재사용한다.
@@ -116,6 +118,39 @@ function youtubeRecipeDevMiddleware() {
   )
 }
 
+function ingredientImageDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/ingredient-image',
+    '식재료 이미지 생성 중 오류가 발생했습니다.',
+    async (body, req) => {
+      const name = typeof body.name === 'string' ? body.name.trim() : ''
+      if (!name) {
+        const err = new Error('식재료 이름이 필요합니다.')
+        err.status = 400
+        throw err
+      }
+      return { imageUrl: await getOrCreateIngredientImageUrl(name, req) }
+    },
+  )
+}
+
+function ingredientFactsDevMiddleware() {
+  return apiDevMiddleware(
+    '/api/ingredient-facts',
+    '식재료 정보 생성 중 오류가 발생했습니다.',
+    async (body, req) => {
+      const name = typeof body.name === 'string' ? body.name.trim() : ''
+      const category = typeof body.category === 'string' ? body.category : '기타'
+      if (!name) {
+        const err = new Error('식재료 이름이 필요합니다.')
+        err.status = 400
+        throw err
+      }
+      return getOrCreateIngredientFacts(name, category, req)
+    },
+  )
+}
+
 // 로컬에서 유통기한 임박 알림 크론 로직을 수동으로 확인해볼 수 있도록 하는
 // 개발 전용 엔드포인트. 실제 배포본(vercel.json의 crons)에는 영향이 없다.
 function expiryCheckDevMiddleware() {
@@ -164,6 +199,8 @@ export default defineConfig(({ mode }) => {
       clovaOcrDevMiddleware(),
       geminiRecipesDevMiddleware(),
       youtubeRecipeDevMiddleware(),
+      ingredientImageDevMiddleware(),
+      ingredientFactsDevMiddleware(),
       expiryCheckDevMiddleware(),
       VitePWA({
         registerType: 'autoUpdate',

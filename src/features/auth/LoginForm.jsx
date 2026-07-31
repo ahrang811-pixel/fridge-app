@@ -15,10 +15,13 @@ export function LoginForm() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState(false)
+  const [resending, setResending] = useState(false)
 
   const resetMessages = () => {
     setError('')
     setNotice('')
+    setUnconfirmedEmail(false)
   }
 
   const switchMode = (next) => {
@@ -53,12 +56,44 @@ export function LoginForm() {
 
     if (authError) {
       setError(authError.message)
+      const isUnconfirmed =
+        authError.code === 'email_not_confirmed' ||
+        /email not confirmed/i.test(authError.message || '')
+      if (mode === 'signin' && isUnconfirmed) {
+        setUnconfirmedEmail(true)
+      }
       return
     }
 
     if (mode === 'signup') {
       setNotice('가입이 완료되었습니다. 이메일 확인이 필요할 수 있어요.')
     }
+  }
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('이메일을 입력해주세요.')
+      return
+    }
+
+    resetMessages()
+    setUnconfirmedEmail(true)
+    setResending(true)
+
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    })
+
+    setResending(false)
+
+    if (resendError) {
+      setError(resendError.message)
+      return
+    }
+
+    setNotice('인증 이메일을 다시 보냈어요. 메일함(스팸함 포함)을 확인해주세요.')
   }
 
   const handleForgotSubmit = async (e) => {
@@ -210,6 +245,17 @@ export function LoginForm() {
 
           {error && <p className="text-xs text-red-500">{error}</p>}
           {notice && <p className="text-xs text-emerald-600">{notice}</p>}
+
+          {mode === 'signin' && unconfirmedEmail && (
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resending}
+              className="rounded-md border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
+            >
+              {resending ? '재전송 중…' : '인증 이메일 재전송'}
+            </button>
+          )}
 
           <button
             type="submit"

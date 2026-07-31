@@ -1,42 +1,24 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../auth/AuthContext'
 import { ONBOARDING_STEPS } from './onboardingSteps'
+import { hasSeenOnboarding, markOnboardingSeen } from './onboardingSession'
 
-// 행이 있으면 "봤음"으로 취급한다. 로그인 직후(회원가입 후 첫 로그인 포함)
-// 이 행이 없는 사용자에게만 튜토리얼을 자동으로 보여준다.
+// 로그인 세션(sessionStorage) 기준으로 한 번만 보여준다. 같은 세션에서
+// 새로고침해도 다시 뜨지 않지만, 로그아웃(AuthContext의 signOut)하면
+// 플래그가 지워져 다음 로그인 때 다시 뜬다. 탭을 닫아도 sessionStorage가
+// 사라지므로 다음에 열면 다시 뜬다.
 export function OnboardingTutorial() {
   const { user } = useAuth()
   const [visible, setVisible] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
-  const [dontShowAgain, setDontShowAgain] = useState(false)
 
   useEffect(() => {
-    if (!user) return undefined
-    let cancelled = false
-
-    supabase
-      .from('user_onboarding')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled && !data) setVisible(true)
-      })
-
-    return () => {
-      cancelled = true
-    }
+    if (!user || hasSeenOnboarding()) return
+    markOnboardingSeen()
+    setVisible(true)
   }, [user])
 
-  const persistDismissal = () => {
-    supabase
-      .from('user_onboarding')
-      .upsert({ user_id: user.id }, { onConflict: 'user_id' })
-  }
-
   const handleSkip = () => {
-    if (dontShowAgain) persistDismissal()
     setVisible(false)
   }
 
@@ -46,7 +28,6 @@ export function OnboardingTutorial() {
       setStepIndex((i) => i + 1)
       return
     }
-    persistDismissal()
     setVisible(false)
   }
 
@@ -65,7 +46,16 @@ export function OnboardingTutorial() {
           <h2 className="text-base font-semibold text-gray-900">{step.title}</h2>
 
           {step.description && (
-            <p className="text-sm leading-relaxed text-gray-600">{step.description}</p>
+            <div className="flex flex-col gap-2">
+              {step.description.map((paragraph, i) => (
+                <p
+                  key={i}
+                  className="break-keep text-sm leading-relaxed text-gray-600"
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           )}
 
           {step.items && (
@@ -75,7 +65,9 @@ export function OnboardingTutorial() {
                   <p className="text-sm font-medium text-gray-800">
                     {item.icon} {item.title}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-500">{item.description}</p>
+                  <p className="mt-0.5 break-keep text-xs leading-relaxed text-gray-500">
+                    {item.description}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -93,32 +85,21 @@ export function OnboardingTutorial() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-5 py-4">
-          <label className="flex shrink-0 items-center gap-1.5 text-xs text-gray-400">
-            <input
-              type="checkbox"
-              checked={dontShowAgain}
-              onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-gray-300"
-            />
-            다시 보지 않기
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="rounded-md px-3 py-2 text-sm text-gray-400 hover:bg-gray-100"
-            >
-              건너뛰기
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-            >
-              {isLast ? '시작하기' : '다음'}
-            </button>
-          </div>
+        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-4">
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="rounded-md px-3 py-2 text-sm text-gray-400 hover:bg-gray-100"
+          >
+            건너뛰기
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            {isLast ? '시작하기' : '다음'}
+          </button>
         </div>
       </div>
     </div>

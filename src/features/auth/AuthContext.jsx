@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { clearOnboardingSeen } from '../onboarding/onboardingSession'
 
 const AuthContext = createContext(null)
 
@@ -28,7 +29,10 @@ export function AuthProvider({ children }) {
     loading: session === undefined,
     passwordRecovery,
     completePasswordRecovery: () => setPasswordRecovery(false),
-    signOut: () => supabase.auth.signOut(),
+    signOut: () => {
+      clearOnboardingSeen()
+      return supabase.auth.signOut()
+    },
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

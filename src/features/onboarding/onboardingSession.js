@@ -1,16 +1,18 @@
 const SEEN_KEY = 'fridge:onboardingSeen'
 
-// sessionStorage는 탭 단위로 유지되고 탭을 닫으면 사라진다.
-// 로그인 세션 동안(새로고침해도) 한 번만 보여주고, 로그아웃하면
-// 다음 로그인 때 다시 보여주기 위해 명시적으로 지운다.
+// iOS PWA(홈 화면 추가)는 앱을 껐다 켤 때 sessionStorage를 초기화해버려서
+// sessionStorage 기준으로는 매번 튜토리얼이 다시 떴다. 대신 localStorage에
+// 저장해 앱을 껐다 켜도 유지되게 하고, 대신 AuthContext에서 SIGNED_IN /
+// SIGNED_OUT 이벤트가 실제로 발생했을 때만 이 플래그를 지워서 "진짜 로그인"
+// 시에만 다시 뜨도록 한다.
 export function hasSeenOnboarding() {
-  return window.sessionStorage.getItem(SEEN_KEY) === 'true'
+  return window.localStorage.getItem(SEEN_KEY) === 'true'
 }
 
 export function markOnboardingSeen() {
-  window.sessionStorage.setItem(SEEN_KEY, 'true')
+  window.localStorage.setItem(SEEN_KEY, 'true')
 }
 
 export function clearOnboardingSeen() {
-  window.sessionStorage.removeItem(SEEN_KEY)
+  window.localStorage.removeItem(SEEN_KEY)
 }

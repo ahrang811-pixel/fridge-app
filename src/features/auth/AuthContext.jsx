@@ -16,6 +16,12 @@ export function AuthProvider({ children }) {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+        // SIGNED_IN/SIGNED_OUT은 실제 로그인/로그아웃 동작에서만 발생한다.
+        // 앱 재실행 시 기존 세션을 복원할 때 발생하는 INITIAL_SESSION 등에서는
+        // 온보딩 플래그를 건드리지 않아야 재실행할 때마다 다시 뜨지 않는다.
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          clearOnboardingSeen()
+        }
         setSession(newSession)
       },
     )
@@ -29,10 +35,7 @@ export function AuthProvider({ children }) {
     loading: session === undefined,
     passwordRecovery,
     completePasswordRecovery: () => setPasswordRecovery(false),
-    signOut: () => {
-      clearOnboardingSeen()
-      return supabase.auth.signOut()
-    },
+    signOut: () => supabase.auth.signOut(),
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

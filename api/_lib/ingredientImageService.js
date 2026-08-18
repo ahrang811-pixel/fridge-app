@@ -18,19 +18,22 @@ function getServiceRoleClient() {
   )
 }
 
-// 이름으로 캐시된 이미지가 있으면 그대로 반환하고, 없을 때만 하루 사용 한도를
-// 체크한 뒤 Gemini로 새로 생성해서 Storage에 올리고 ingredient_images에 캐싱한다.
-export async function getOrCreateIngredientImageUrl(name, req) {
+// 이름으로 캐시된 이미지가 있으면 그대로 반환하고, 없을 때(또는 force로 재생성을
+// 요청했을 때)만 하루 사용 한도를 체크한 뒤 새로 생성해서 Storage에 올리고
+// ingredient_images에 캐싱한다.
+export async function getOrCreateIngredientImageUrl(name, req, { force = false } = {}) {
   const supabase = getServiceRoleClient()
 
-  const { data: cached, error: cacheError } = await supabase
-    .from('ingredient_images')
-    .select('image_url')
-    .eq('name', name)
-    .maybeSingle()
+  if (!force) {
+    const { data: cached, error: cacheError } = await supabase
+      .from('ingredient_images')
+      .select('image_url')
+      .eq('name', name)
+      .maybeSingle()
 
-  if (cacheError) throw cacheError
-  if (cached?.image_url) return cached.image_url
+    if (cacheError) throw cacheError
+    if (cached?.image_url) return cached.image_url
+  }
 
   await enforceDailyLimit(req, 'ingredient_image')
 
@@ -38,9 +41,11 @@ export async function getOrCreateIngredientImageUrl(name, req) {
   const extension = MIME_EXTENSIONS[mimeType] || 'png'
   // 이름을 그대로(또는 encodeURIComponent해서) Storage 키로 쓰면 한글 이름에서
   // 나오는 %XX 시퀀스를 Supabase Storage가 "Invalid key"로 거부한다. 사람이 읽을
-  // 필요 없는 키이므로 이름의 해시값(ASCII)을 키로 쓴다.
+  // 필요 없는 키이므로 이름의 해시값(ASCII)을 키로 쓴다. 매번 다른 타임스탬프를
+  // 붙여 재생성 시 이전 파일과 경로가 겹치지 않게 해서, 브라우저/CDN에 캐시된
+  // 예전 이미지가 그대로 보이는 문제를 피한다.
   const hash = createHash('sha256').update(name).digest('hex')
-  const path = `${hash}.${extension}`
+  const path = `${hash}-${Date.now()}.${extension}`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)

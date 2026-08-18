@@ -11,6 +11,7 @@ import {
 export function WeeklyView({
   mealsByDate,
   mealTypes,
+  recipes,
   referenceDate,
   onChangeReferenceDate,
   updateMeal,
@@ -89,6 +90,7 @@ export function WeeklyView({
                 dateKey={dateKey}
                 meals={mealsByDate[dateKey]}
                 mealTypes={mealTypes}
+                recipes={recipes}
                 onUpdateMeal={updateMeal}
               />
             </div>

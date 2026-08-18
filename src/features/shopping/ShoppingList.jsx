@@ -1,7 +1,16 @@
 import { CoupangSearchButton } from '../../components/CoupangSearchButton'
 import { COUPANG_PARTNERS_DISCLOSURE } from '../../utils/affiliateLink'
 
-export function ShoppingList({ items, onToggle, onDelete }) {
+function groupByCategory(items, categories) {
+  return categories
+    .map((category) => ({
+      category,
+      items: items.filter((item) => item.category === category),
+    }))
+    .filter((group) => group.items.length > 0)
+}
+
+export function ShoppingList({ categories, items, onToggle, onDelete }) {
   if (items.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-gray-400">
@@ -12,6 +21,8 @@ export function ShoppingList({ items, onToggle, onDelete }) {
 
   const pending = items.filter((item) => !item.checked)
   const purchased = items.filter((item) => item.checked)
+  const pendingGroups = groupByCategory(pending, categories)
+  const purchasedGroups = groupByCategory(purchased, categories)
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,16 +36,25 @@ export function ShoppingList({ items, onToggle, onDelete }) {
             모두 담았어요!
           </p>
         ) : (
-          <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            {pending.map((item) => (
-              <ShoppingRow
-                key={item.id}
-                item={item}
-                onToggle={onToggle}
-                onDelete={onDelete}
-              />
+          <div className="flex flex-col gap-4">
+            {pendingGroups.map(({ category, items: groupItems }) => (
+              <div key={category}>
+                <h4 className="mb-1.5 text-xs font-medium text-gray-400">
+                  {category} <span>({groupItems.length})</span>
+                </h4>
+                <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  {groupItems.map((item) => (
+                    <ShoppingRow
+                      key={item.id}
+                      item={item}
+                      onToggle={onToggle}
+                      onDelete={onDelete}
+                    />
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
@@ -43,16 +63,25 @@ export function ShoppingList({ items, onToggle, onDelete }) {
           <h3 className="mb-2 text-sm font-semibold text-gray-500">
             구매 완료 <span className="text-gray-400">({purchased.length})</span>
           </h3>
-          <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            {purchased.map((item) => (
-              <ShoppingRow
-                key={item.id}
-                item={item}
-                onToggle={onToggle}
-                onDelete={onDelete}
-              />
+          <div className="flex flex-col gap-4">
+            {purchasedGroups.map(({ category, items: groupItems }) => (
+              <div key={category}>
+                <h4 className="mb-1.5 text-xs font-medium text-gray-400">
+                  {category} <span>({groupItems.length})</span>
+                </h4>
+                <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  {groupItems.map((item) => (
+                    <ShoppingRow
+                      key={item.id}
+                      item={item}
+                      onToggle={onToggle}
+                      onDelete={onDelete}
+                    />
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 export const ONBOARDING_STEPS = [
   {
     icon: '📦',
-    title: '재고 관리',
+    title: '내 냉장고',
     description: [
       '보유 중인 식재료와 장봐야 할 목록을 관리해요.',
       '유통기한이 임박하면 알려드려요.',

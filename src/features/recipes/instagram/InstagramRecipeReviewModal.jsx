@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 export function InstagramRecipeReviewModal({
   sourceUrl,
+  thumbnailUrl,
   found,
   categories,
   initialName,
@@ -27,6 +28,7 @@ export function InstagramRecipeReviewModal({
       ingredients: ingredients.trim(),
       instructions: instructions.trim(),
       instagram_url: sourceUrl,
+      thumbnail_url: thumbnailUrl ?? null,
     })
   }
 

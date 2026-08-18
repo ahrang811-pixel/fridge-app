@@ -15,6 +15,7 @@ import {
 export function CalendarView({
   mealsByDate,
   mealTypes,
+  recipes,
   referenceDate,
   onChangeReferenceDate,
   updateMeal,
@@ -82,7 +83,7 @@ export function CalendarView({
             const selected = key === selectedKey
             const dayMeals = mealsByDate[key] ?? {}
             const previewEntries = mealTypes
-              .map((mt) => dayMeals[mt.id])
+              .map((mt) => dayMeals[mt.id]?.menu)
               .filter((menu) => menu && menu.trim())
             return (
               <button
@@ -133,6 +134,7 @@ export function CalendarView({
           dateKey={selectedKey}
           meals={mealsByDate[selectedKey]}
           mealTypes={mealTypes}
+          recipes={recipes}
           onUpdateMeal={updateMeal}
         />
       </div>

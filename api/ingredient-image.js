@@ -12,8 +12,9 @@ export default async function handler(req, res) {
       res.status(400).json({ message: '식재료 이름이 필요합니다.' })
       return
     }
+    const force = req.body?.force === true
 
-    const imageUrl = await getOrCreateIngredientImageUrl(name, req)
+    const imageUrl = await getOrCreateIngredientImageUrl(name, req, { force })
     res.status(200).json({ imageUrl })
   } catch (err) {
     res.status(err.status || 500).json({

@@ -1,4 +1,4 @@
-import { fetchInstagramCaption, isInstagramPostUrl } from './_lib/instagram.js'
+import { fetchInstagramPostMeta, isInstagramPostUrl } from './_lib/instagram.js'
 import { extractRecipeFromCaption } from './_lib/geminiRecipeExtract.js'
 import { enforceDailyLimit } from './_lib/usageLimiter.js'
 
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
       Array.isArray(categories) && categories.length ? categories : ['기타']
 
     let captionText = typeof caption === 'string' ? caption.trim() : ''
+    let thumbnailUrl = null
 
     if (!captionText) {
       const trimmedUrl = typeof url === 'string' ? url.trim() : ''
@@ -24,12 +25,13 @@ export default async function handler(req, res) {
         return
       }
 
-      const fetched = await fetchInstagramCaption(trimmedUrl)
-      if (!fetched) {
-        res.status(200).json({ fetched: false })
+      const fetched = await fetchInstagramPostMeta(trimmedUrl)
+      thumbnailUrl = fetched.thumbnailUrl
+      if (!fetched.caption) {
+        res.status(200).json({ fetched: false, thumbnailUrl })
         return
       }
-      captionText = fetched
+      captionText = fetched.caption
     }
 
     await enforceDailyLimit(req, 'instagram_recipe')
@@ -39,7 +41,7 @@ export default async function handler(req, res) {
       categories: safeCategories,
     })
 
-    res.status(200).json({ fetched: true, caption: captionText, ...extracted })
+    res.status(200).json({ fetched: true, caption: captionText, thumbnailUrl, ...extracted })
   } catch (err) {
     res.status(err.status || 500).json({
       message: err.message || '인스타그램 레시피 분석 중 오류가 발생했습니다.',

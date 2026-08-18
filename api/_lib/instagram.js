@@ -35,8 +35,11 @@ export function isInstagramPostUrl(input) {
   )
 }
 
-// 성공하면 캡션 문자열을, 무엇이든 실패하면 null을 돌려준다(절대 throw하지 않음).
-export async function fetchInstagramCaption(url) {
+// 성공하면 { caption, thumbnailUrl }을, 무엇이든 실패하면
+// { caption: null, thumbnailUrl: null }을 돌려준다(절대 throw하지 않음).
+// 캡션과 썸네일 모두 같은 og 메타태그가 박힌 HTML 한 번으로 얻을 수 있어서
+// 요청을 한 번만 보낸다.
+export async function fetchInstagramPostMeta(url) {
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
@@ -50,20 +53,31 @@ export async function fetchInstagramCaption(url) {
       },
     }).finally(() => clearTimeout(timeout))
 
-    if (!response.ok) return null
+    if (!response.ok) return { caption: null, thumbnailUrl: null }
 
     const html = await response.text()
-    const match = html.match(/<meta property="og:description" content="([^"]*)"/)
-    if (!match) return null
 
-    const raw = decodeHtmlEntities(match[1])
-    // og:description은 보통 `12 likes, 3 comments - user on date: "실제 캡션"` 형태라
-    // 마지막 큰따옴표 구간만 뽑아낸다. 형태가 다르면 원문 전체를 그대로 쓴다.
-    const quoted = raw.match(/:\s*"([\s\S]*)"\s*$/)
-    const caption = (quoted ? quoted[1] : raw).trim()
+    const captionMatch = html.match(/<meta property="og:description" content="([^"]*)"/)
+    let caption = null
+    if (captionMatch) {
+      const raw = decodeHtmlEntities(captionMatch[1])
+      // og:description은 보통 `12 likes, 3 comments - user on date: "실제 캡션"` 형태라
+      // 마지막 큰따옴표 구간만 뽑아낸다. 형태가 다르면 원문 전체를 그대로 쓴다.
+      const quoted = raw.match(/:\s*"([\s\S]*)"\s*$/)
+      caption = (quoted ? quoted[1] : raw).trim() || null
+    }
 
-    return caption || null
+    const imageMatch = html.match(/<meta property="og:image" content="([^"]*)"/)
+    const thumbnailUrl = imageMatch ? decodeHtmlEntities(imageMatch[1]).trim() || null : null
+
+    return { caption, thumbnailUrl }
   } catch {
-    return null
+    return { caption: null, thumbnailUrl: null }
   }
+}
+
+// 캡션만 필요한 기존 호출부를 위한 얇은 래퍼.
+export async function fetchInstagramCaption(url) {
+  const { caption } = await fetchInstagramPostMeta(url)
+  return caption
 }

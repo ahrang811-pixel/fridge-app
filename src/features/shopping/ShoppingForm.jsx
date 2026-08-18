@@ -1,9 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-const EMPTY_FORM = { name: '', quantity: '' }
+const emptyForm = (categories) => ({
+  name: '',
+  quantity: '',
+  category: categories[0] ?? '',
+})
 
-export function ShoppingForm({ onSubmit }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+export function ShoppingForm({ categories, onSubmit }) {
+  const [form, setForm] = useState(() => emptyForm(categories))
+
+  useEffect(() => {
+    setForm((prev) =>
+      prev.category && categories.includes(prev.category)
+        ? prev
+        : { ...prev, category: categories[0] ?? '' },
+    )
+  }, [categories])
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -14,8 +26,12 @@ export function ShoppingForm({ onSubmit }) {
     const name = form.name.trim()
     if (!name) return
 
-    onSubmit({ name, quantity: form.quantity.trim() })
-    setForm(EMPTY_FORM)
+    onSubmit({
+      name,
+      quantity: form.quantity.trim(),
+      category: form.category,
+    })
+    setForm(emptyForm(categories))
   }
 
   return (
@@ -47,6 +63,23 @@ export function ShoppingForm({ onSubmit }) {
           placeholder="예: 1개"
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
         />
+      </div>
+
+      <div className="w-32">
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          카테고리
+        </label>
+        <select
+          value={form.category}
+          onChange={handleChange('category')}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
       </div>
 
       <button

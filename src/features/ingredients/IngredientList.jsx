@@ -18,7 +18,14 @@ function sortByExpiry(items) {
   })
 }
 
-export function IngredientList({ categories, items, isFiltered, onEdit, onDelete }) {
+export function IngredientList({
+  categories,
+  items,
+  isFiltered,
+  groupByCategory = true,
+  onEdit,
+  onDelete,
+}) {
   const [selectedId, setSelectedId] = useState(null)
 
   if (items.length === 0) {
@@ -49,12 +56,16 @@ export function IngredientList({ categories, items, isFiltered, onEdit, onDelete
     }
   })
 
-  const grouped = categories.map((category) => ({
-    category,
-    items: sortByExpiry(
-      withExpiry.filter((item) => item.category === category),
-    ),
-  })).filter((group) => group.items.length > 0)
+  const grouped = groupByCategory
+    ? categories
+        .map((category) => ({
+          category,
+          items: sortByExpiry(
+            withExpiry.filter((item) => item.category === category),
+          ),
+        }))
+        .filter((group) => group.items.length > 0)
+    : [{ category: null, items: sortByExpiry(withExpiry) }]
 
   const selectedItem = withExpiry.find((item) => item.id === selectedId) ?? null
 
@@ -71,10 +82,12 @@ export function IngredientList({ categories, items, isFiltered, onEdit, onDelete
   return (
     <div className="flex flex-col gap-6">
       {grouped.map(({ category, items: groupItems }) => (
-        <div key={category}>
-          <h3 className="mb-2 text-sm font-semibold text-gray-500">
-            {category} <span className="text-gray-400">({groupItems.length})</span>
-          </h3>
+        <div key={category ?? 'flat'}>
+          {category && (
+            <h3 className="mb-2 text-sm font-semibold text-gray-500">
+              {category} <span className="text-gray-400">({groupItems.length})</span>
+            </h3>
+          )}
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
             {groupItems.map((item) => (
               <IngredientCard

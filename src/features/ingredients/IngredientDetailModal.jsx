@@ -16,7 +16,7 @@ function Section({ title, children }) {
 }
 
 export function IngredientDetailModal({ item, onClose, onEdit, onDelete }) {
-  const imageUrl = useIngredientImage(item.name)
+  const { imageUrl, isKnown, regenerate, regenerating } = useIngredientImage(item.name)
   const [facts, setFacts] = useState(null)
   const [factsError, setFactsError] = useState(null)
 
@@ -67,6 +67,16 @@ export function IngredientDetailModal({ item, onClose, onEdit, onDelete }) {
               {item.isEstimated && item.days !== null ? ' (예상)' : ''}
               {item.quantity ? ` · ${item.quantity}` : ''}
             </span>
+            {!isKnown && (
+              <button
+                type="button"
+                onClick={regenerate}
+                disabled={regenerating}
+                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {regenerating ? '이미지 생성하는 중…' : '🔄 이미지 다시 생성'}
+              </button>
+            )}
           </div>
 
           <div className="mt-4 flex flex-col items-center gap-1">

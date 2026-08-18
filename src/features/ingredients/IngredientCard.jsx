@@ -3,7 +3,7 @@ import { EXPIRY_STATUS_STYLES, formatExpiryLabel } from './expiry'
 import { useIngredientImage } from './useIngredientImage'
 
 export function IngredientCard({ item, onClick }) {
-  const imageUrl = useIngredientImage(item.name)
+  const { imageUrl } = useIngredientImage(item.name)
 
   return (
     <button

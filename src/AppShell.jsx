@@ -16,7 +16,7 @@ import {
 } from './features/settings/defaults'
 
 const TABS = [
-  { id: 'inventory', label: '재고 관리', icon: '📦' },
+  { id: 'inventory', label: '내 냉장고', icon: '📦' },
   { id: 'meal', label: '식단', icon: '🍽️' },
   { id: 'recipes', label: '레시피', icon: '📖' },
   { id: 'settings', label: '설정', icon: '⚙️' },

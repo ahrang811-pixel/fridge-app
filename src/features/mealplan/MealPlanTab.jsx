@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { SegmentedToggle } from '../../components/SegmentedToggle'
+import { useSpaceTable } from '../../hooks/useSpaceTable'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { CalendarView } from './CalendarView'
 import { WeeklyView } from './WeeklyView'
@@ -13,6 +14,7 @@ const VIEWS = [
 export function MealPlanTab({ spaceId }) {
   const { mealsByDate, updateMeal } = useMealPlan(spaceId)
   const { mealTypes: mealTypeSettings } = useSpaceSettings(spaceId)
+  const { items: recipes } = useSpaceTable('recipes', spaceId)
   const mealTypes = mealTypeSettings.filter((mt) => mt.enabled)
   const [view, setView] = useState('week')
   const [referenceDate, setReferenceDate] = useState(() => new Date())
@@ -25,6 +27,7 @@ export function MealPlanTab({ spaceId }) {
         <WeeklyView
           mealsByDate={mealsByDate}
           mealTypes={mealTypes}
+          recipes={recipes}
           referenceDate={referenceDate}
           onChangeReferenceDate={setReferenceDate}
           updateMeal={updateMeal}
@@ -33,6 +36,7 @@ export function MealPlanTab({ spaceId }) {
         <CalendarView
           mealsByDate={mealsByDate}
           mealTypes={mealTypes}
+          recipes={recipes}
           referenceDate={referenceDate}
           onChangeReferenceDate={setReferenceDate}
           updateMeal={updateMeal}

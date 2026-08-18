@@ -23,6 +23,8 @@ export const DEFAULT_RECIPE_CATEGORIES = [
   '기타',
 ]
 
+export const DEFAULT_SHOPPING_CATEGORIES = ['마트', '온라인', '편의점', '기타']
+
 export const DEFAULT_MEAL_TYPES = [
   { id: 'breakfast', label: '아침', enabled: true },
   { id: 'lunch', label: '점심', enabled: true },

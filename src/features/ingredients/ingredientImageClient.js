@@ -7,14 +7,14 @@ import { getAuthHeader } from '../../lib/supabaseClient'
 const urlCache = new Map()
 const inflightRequests = new Map()
 
-async function fetchIngredientImageUrl(name) {
+async function fetchIngredientImageUrl(name, { force = false } = {}) {
   const res = await fetch('/api/ingredient-image', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(await getAuthHeader()),
     },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, force }),
   })
 
   const data = await res.json().catch(() => null)
@@ -43,4 +43,12 @@ export function getIngredientImageUrl(name) {
 
   inflightRequests.set(name, promise)
   return promise
+}
+
+// "이미지 다시 생성" 버튼에서 호출. 캐시를 무시하고 서버에 새로 생성을
+// 요청한 뒤, 얕은 캐시도 새 URL로 덮어써서 이후 재렌더링에도 반영되게 한다.
+export async function regenerateIngredientImageUrl(name) {
+  const url = await fetchIngredientImageUrl(name, { force: true })
+  urlCache.set(name, url)
+  return url
 }

@@ -4,6 +4,7 @@ import {
   DEFAULT_INGREDIENT_CATEGORIES,
   DEFAULT_MEAL_TYPES,
   DEFAULT_RECIPE_CATEGORIES,
+  DEFAULT_SHOPPING_CATEGORIES,
 } from './defaults'
 
 export function useSpaceSettings(spaceId) {
@@ -34,6 +35,8 @@ export function useSpaceSettings(spaceId) {
     settings?.ingredient_categories ?? DEFAULT_INGREDIENT_CATEGORIES
   const recipeCategories =
     settings?.recipe_categories ?? DEFAULT_RECIPE_CATEGORIES
+  const shoppingCategories =
+    settings?.shopping_categories ?? DEFAULT_SHOPPING_CATEGORIES
   const mealTypes = settings?.meal_types ?? DEFAULT_MEAL_TYPES
 
   const updateIngredientCategories = async (next) => {
@@ -56,6 +59,16 @@ export function useSpaceSettings(spaceId) {
       .eq('space_id', spaceId)
   }
 
+  const updateShoppingCategories = async (next) => {
+    setSettings((prev) =>
+      prev ? { ...prev, shopping_categories: next } : prev,
+    )
+    return supabase
+      .from('space_settings')
+      .update({ shopping_categories: next })
+      .eq('space_id', spaceId)
+  }
+
   const updateMealTypes = async (next) => {
     setSettings((prev) => (prev ? { ...prev, meal_types: next } : prev))
     return supabase
@@ -68,9 +81,11 @@ export function useSpaceSettings(spaceId) {
     loading,
     ingredientCategories,
     recipeCategories,
+    shoppingCategories,
     mealTypes,
     updateIngredientCategories,
     updateRecipeCategories,
+    updateShoppingCategories,
     updateMealTypes,
     refetch,
   }

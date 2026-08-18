@@ -3,11 +3,9 @@ import { useAuth } from '../auth/AuthContext'
 import { ONBOARDING_STEPS } from './onboardingSteps'
 import { hasSeenOnboarding, markOnboardingSeen } from './onboardingSession'
 
-// "봤음" 여부는 localStorage에 저장되어 앱을 껐다 켜도(iOS PWA 재실행 포함)
-// 유지된다. AuthContext가 Supabase의 SIGNED_IN/SIGNED_OUT 이벤트가 실제로
-// 발생했을 때만 이 플래그를 지우므로, 로그인 상태가 그대로 복원되는
-// 재실행(INITIAL_SESSION)에서는 다시 뜨지 않고 진짜 로그인/로그아웃 후
-// 재로그인했을 때만 다시 뜬다.
+// 가입 직후 로그인 상태가 되는 순간 최초 1회만 보여주고 localStorage에
+// 영구히 기록한다. 그 뒤로는 로그인/로그아웃/새로고침 등 무엇을 해도
+// 다시 뜨지 않는다.
 export function OnboardingTutorial() {
   const { user } = useAuth()
   const [visible, setVisible] = useState(false)

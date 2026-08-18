@@ -1,42 +1,30 @@
 import { useState } from 'react'
-import { useSpaceTable } from '../../hooks/useSpaceTable'
-import { useSpaceSettings } from '../settings/useSpaceSettings'
+import { ALL_CATEGORY_ID, CategoryFilterBar } from './CategoryFilterBar'
 import { IngredientForm } from './IngredientForm'
 import { IngredientList } from './IngredientList'
 import { ReceiptScanFlow } from './receipt/ReceiptScanFlow'
 
-function toApp(row) {
-  return { ...row, expiryDate: row.expiry_date, purchaseDate: row.purchase_date }
-}
-
-function toRow({ expiryDate, purchaseDate, ...rest }) {
-  return { ...rest, expiry_date: expiryDate, purchase_date: purchaseDate }
-}
-
-export function IngredientsTab({ spaceId }) {
-  const {
-    items: rows,
-    addItem,
-    updateItem,
-    deleteItem,
-  } = useSpaceTable('ingredients', spaceId)
-  const { ingredientCategories: categories } = useSpaceSettings(spaceId)
+export function IngredientsTab({ categories, items, addItem, updateItem, deleteItem }) {
   const [editingId, setEditingId] = useState(null)
   const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY_ID)
 
-  const items = rows.map(toApp)
   const editingItem = items.find((item) => item.id === editingId) ?? null
   const query = search.trim().toLowerCase()
+  const categoryFiltered =
+    activeCategory === ALL_CATEGORY_ID
+      ? items
+      : items.filter((item) => item.category === activeCategory)
   const visibleItems = query
-    ? items.filter((item) => item.name.toLowerCase().includes(query))
-    : items
+    ? categoryFiltered.filter((item) => item.name.toLowerCase().includes(query))
+    : categoryFiltered
 
   const handleSubmit = async (data) => {
     if (editingId) {
-      await updateItem(editingId, toRow(data))
+      await updateItem(editingId, data)
       setEditingId(null)
     } else {
-      await addItem(toRow(data))
+      await addItem(data)
     }
   }
 
@@ -50,12 +38,18 @@ export function IngredientsTab({ spaceId }) {
 
   const handleImportFromReceipt = async (newItems) => {
     for (const item of newItems) {
-      await addItem(toRow(item))
+      await addItem(item)
     }
   }
 
   return (
     <div className="flex flex-col gap-6">
+      <CategoryFilterBar
+        categories={categories}
+        value={activeCategory}
+        onChange={setActiveCategory}
+      />
+
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="search"
@@ -76,6 +70,7 @@ export function IngredientsTab({ spaceId }) {
         categories={categories}
         items={visibleItems}
         isFiltered={!!query}
+        groupByCategory={activeCategory === ALL_CATEGORY_ID}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

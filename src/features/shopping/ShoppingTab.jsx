@@ -1,4 +1,5 @@
 import { useSpaceTable } from '../../hooks/useSpaceTable'
+import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { ShoppingForm } from './ShoppingForm'
 import { ShoppingList } from './ShoppingList'
 
@@ -7,6 +8,7 @@ export function ShoppingTab({ spaceId }) {
     'shopping_items',
     spaceId,
   )
+  const { shoppingCategories: categories } = useSpaceSettings(spaceId)
 
   const handleAdd = (data) => addItem({ checked: false, ...data })
 
@@ -28,7 +30,7 @@ export function ShoppingTab({ spaceId }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <ShoppingForm onSubmit={handleAdd} />
+      <ShoppingForm categories={categories} onSubmit={handleAdd} />
 
       {purchasedCount > 0 && (
         <div className="-mb-2 flex justify-end">
@@ -43,6 +45,7 @@ export function ShoppingTab({ spaceId }) {
       )}
 
       <ShoppingList
+        categories={categories}
         items={items}
         onToggle={handleToggle}
         onDelete={handleDelete}

@@ -18,6 +18,9 @@ export function InstagramRecipeFlow({ categories, onSaveRecipe }) {
   const [manualCaption, setManualCaption] = useState('')
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+  // 캡션 자동 수집이 실패해 수동 입력으로 넘어가도, 같은 요청에서 함께 온
+  // 썸네일(og:image)은 있으면 계속 들고 있다가 저장할 때 같이 넘긴다.
+  const [thumbnailUrl, setThumbnailUrl] = useState(null)
 
   const handleFetch = async (e) => {
     e.preventDefault()
@@ -27,6 +30,7 @@ export function InstagramRecipeFlow({ categories, onSaveRecipe }) {
     setStatus('loading')
     try {
       const data = await analyzeInstagramRecipe({ url: url.trim(), categories })
+      setThumbnailUrl(data.thumbnailUrl ?? null)
       if (!data.fetched) {
         setStatus('manual')
         return
@@ -63,6 +67,7 @@ export function InstagramRecipeFlow({ categories, onSaveRecipe }) {
     setResult(null)
     setUrl('')
     setManualCaption('')
+    setThumbnailUrl(null)
   }
 
   const handleSave = async (row) => {
@@ -140,6 +145,7 @@ export function InstagramRecipeFlow({ categories, onSaveRecipe }) {
       {(status === 'review' || status === 'saving') && result && (
         <InstagramRecipeReviewModal
           sourceUrl={result.sourceUrl}
+          thumbnailUrl={result.thumbnailUrl ?? thumbnailUrl}
           found={!!result.found}
           categories={categories}
           initialName={result.found ? (result.name ?? '') : ''}

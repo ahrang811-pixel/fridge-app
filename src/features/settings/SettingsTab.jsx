@@ -37,6 +37,12 @@ const SECTIONS = [
     description: '레시피 탭에서 사용할 카테고리(폴더)를 관리합니다.',
   },
   {
+    id: 'shoppingCategories',
+    icon: '🛒',
+    label: '장보기 카테고리',
+    description: '장보기 목록에서 사용할 카테고리(마트, 온라인 등)를 관리합니다.',
+  },
+  {
     id: 'font',
     icon: '🔤',
     label: '폰트',
@@ -75,9 +81,11 @@ export function SettingsTab({
   const {
     ingredientCategories,
     recipeCategories,
+    shoppingCategories,
     mealTypes,
     updateIngredientCategories,
     updateRecipeCategories,
+    updateShoppingCategories,
     updateMealTypes,
   } = useSpaceSettings(spaceId)
 
@@ -133,6 +141,31 @@ export function SettingsTab({
 
   const addRecipeCategory = (name) =>
     updateRecipeCategories([...recipeCategories, name])
+
+  const renameShoppingCategory = async (oldName, newName) => {
+    await updateShoppingCategories(
+      shoppingCategories.map((c) => (c === oldName ? newName : c)),
+    )
+    await supabase
+      .from('shopping_items')
+      .update({ category: newName })
+      .eq('space_id', spaceId)
+      .eq('category', oldName)
+  }
+
+  const deleteShoppingCategory = async (name) => {
+    await updateShoppingCategories(
+      shoppingCategories.filter((c) => c !== name),
+    )
+    await supabase
+      .from('shopping_items')
+      .update({ category: FALLBACK_CATEGORY })
+      .eq('space_id', spaceId)
+      .eq('category', name)
+  }
+
+  const addShoppingCategory = (name) =>
+    updateShoppingCategories([...shoppingCategories, name])
 
   const toggleMealType = (id) => {
     const enabledCount = mealTypes.filter((m) => m.enabled).length
@@ -231,6 +264,16 @@ export function SettingsTab({
           onAdd={addRecipeCategory}
           onRename={renameRecipeCategory}
           onDelete={deleteRecipeCategory}
+        />
+      )}
+
+      {section === 'shoppingCategories' && (
+        <CategoryManager
+          categories={shoppingCategories}
+          protectedCategory={FALLBACK_CATEGORY}
+          onAdd={addShoppingCategory}
+          onRename={renameShoppingCategory}
+          onDelete={deleteShoppingCategory}
         />
       )}
 

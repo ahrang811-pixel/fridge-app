@@ -25,10 +25,10 @@ const SECTIONS = [
     description: '식재료 목록 탭에서 사용할 카테고리를 관리합니다.',
   },
   {
-    id: 'mealTypes',
-    icon: '📅',
-    label: '식단 짜기 끼니',
-    description: '실제로 사용할 끼니만 선택합니다.',
+    id: 'shoppingCategories',
+    icon: '🛒',
+    label: '장보기 카테고리',
+    description: '장보기 목록에서 사용할 카테고리(마트, 온라인 등)를 관리합니다.',
   },
   {
     id: 'recipeCategories',
@@ -37,10 +37,10 @@ const SECTIONS = [
     description: '레시피 탭에서 사용할 카테고리(폴더)를 관리합니다.',
   },
   {
-    id: 'shoppingCategories',
-    icon: '🛒',
-    label: '장보기 카테고리',
-    description: '장보기 목록에서 사용할 카테고리(마트, 온라인 등)를 관리합니다.',
+    id: 'mealTypes',
+    icon: '📅',
+    label: '식단 짜기 끼니',
+    description: '실제로 사용할 끼니만 선택합니다.',
   },
   {
     id: 'font',

@@ -7,8 +7,8 @@ import { QuickIngredientFab } from '../ingredients/QuickIngredientFab'
 import { ShoppingTab } from '../shopping/ShoppingTab'
 
 const VIEWS = [
-  { id: 'ingredients', label: '보유 중' },
-  { id: 'shopping', label: '쇼핑 리스트' },
+  { id: 'ingredients', label: '식재료' },
+  { id: 'shopping', label: '장보기' },
 ]
 
 function toApp(row) {

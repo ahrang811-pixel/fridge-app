@@ -1,7 +1,8 @@
 import { CoupangSearchButton } from '../../components/CoupangSearchButton'
 import { COUPANG_PARTNERS_DISCLOSURE } from '../../utils/affiliateLink'
 
-function groupByCategory(items, categories) {
+function toGroups(items, categories, grouped) {
+  if (!grouped) return [{ category: null, items }]
   return categories
     .map((category) => ({
       category,
@@ -10,19 +11,27 @@ function groupByCategory(items, categories) {
     .filter((group) => group.items.length > 0)
 }
 
-export function ShoppingList({ categories, items, onToggle, onDelete }) {
+export function ShoppingList({
+  categories,
+  items,
+  groupByCategory = true,
+  onToggle,
+  onDelete,
+}) {
   if (items.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-gray-400">
-        장봐야 할 항목이 없습니다. 위에서 추가해보세요.
+        {groupByCategory
+          ? '장봐야 할 항목이 없습니다. 위에서 추가해보세요.'
+          : '이 마트에 담긴 항목이 없습니다.'}
       </p>
     )
   }
 
   const pending = items.filter((item) => !item.checked)
   const purchased = items.filter((item) => item.checked)
-  const pendingGroups = groupByCategory(pending, categories)
-  const purchasedGroups = groupByCategory(purchased, categories)
+  const pendingGroups = toGroups(pending, categories, groupByCategory)
+  const purchasedGroups = toGroups(purchased, categories, groupByCategory)
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,25 +45,11 @@ export function ShoppingList({ categories, items, onToggle, onDelete }) {
             모두 담았어요!
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
-            {pendingGroups.map(({ category, items: groupItems }) => (
-              <div key={category}>
-                <h4 className="mb-1.5 text-xs font-medium text-gray-400">
-                  {category} <span>({groupItems.length})</span>
-                </h4>
-                <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                  {groupItems.map((item) => (
-                    <ShoppingRow
-                      key={item.id}
-                      item={item}
-                      onToggle={onToggle}
-                      onDelete={onDelete}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <CategoryGroups
+            groups={pendingGroups}
+            onToggle={onToggle}
+            onDelete={onDelete}
+          />
         )}
       </div>
 
@@ -63,27 +58,39 @@ export function ShoppingList({ categories, items, onToggle, onDelete }) {
           <h3 className="mb-2 text-sm font-semibold text-gray-500">
             구매 완료 <span className="text-gray-400">({purchased.length})</span>
           </h3>
-          <div className="flex flex-col gap-4">
-            {purchasedGroups.map(({ category, items: groupItems }) => (
-              <div key={category}>
-                <h4 className="mb-1.5 text-xs font-medium text-gray-400">
-                  {category} <span>({groupItems.length})</span>
-                </h4>
-                <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                  {groupItems.map((item) => (
-                    <ShoppingRow
-                      key={item.id}
-                      item={item}
-                      onToggle={onToggle}
-                      onDelete={onDelete}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <CategoryGroups
+            groups={purchasedGroups}
+            onToggle={onToggle}
+            onDelete={onDelete}
+          />
         </div>
       )}
+    </div>
+  )
+}
+
+function CategoryGroups({ groups, onToggle, onDelete }) {
+  return (
+    <div className="flex flex-col gap-4">
+      {groups.map(({ category, items: groupItems }) => (
+        <div key={category ?? 'flat'}>
+          {category && (
+            <h4 className="mb-1.5 text-xs font-medium text-gray-400">
+              {category} <span>({groupItems.length})</span>
+            </h4>
+          )}
+          <ul className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            {groupItems.map((item) => (
+              <ShoppingRow
+                key={item.id}
+                item={item}
+                onToggle={onToggle}
+                onDelete={onDelete}
+              />
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   )
 }

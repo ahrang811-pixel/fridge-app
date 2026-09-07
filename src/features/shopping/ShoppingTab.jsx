@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { ALL_CATEGORY_ID, CategoryFilterBar } from '../../components/CategoryFilterBar'
 import { useSpaceTable } from '../../hooks/useSpaceTable'
 import { useSpaceSettings } from '../settings/useSpaceSettings'
 import { ShoppingForm } from './ShoppingForm'
@@ -9,6 +11,12 @@ export function ShoppingTab({ spaceId }) {
     spaceId,
   )
   const { shoppingCategories: categories } = useSpaceSettings(spaceId)
+  const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY_ID)
+
+  const visibleItems =
+    activeCategory === ALL_CATEGORY_ID
+      ? items
+      : items.filter((item) => item.category === activeCategory)
 
   const handleAdd = (data) => addItem({ checked: false, ...data })
 
@@ -20,16 +28,24 @@ export function ShoppingTab({ spaceId }) {
 
   const handleDelete = (id) => deleteItem(id)
 
+  // 필터가 걸려 있으면 화면에 보이는 항목만 정리해서, 버튼이 눈에 보이는
+  // 목록과 다르게 동작하지 않도록 한다.
   const handleClearPurchased = () => {
-    items
+    visibleItems
       .filter((item) => item.checked)
       .forEach((item) => deleteItem(item.id))
   }
 
-  const purchasedCount = items.filter((item) => item.checked).length
+  const purchasedCount = visibleItems.filter((item) => item.checked).length
 
   return (
     <div className="flex flex-col gap-6">
+      <CategoryFilterBar
+        categories={categories}
+        value={activeCategory}
+        onChange={setActiveCategory}
+      />
+
       <ShoppingForm categories={categories} onSubmit={handleAdd} />
 
       {purchasedCount > 0 && (
@@ -46,7 +62,8 @@ export function ShoppingTab({ spaceId }) {
 
       <ShoppingList
         categories={categories}
-        items={items}
+        items={visibleItems}
+        groupByCategory={activeCategory === ALL_CATEGORY_ID}
         onToggle={handleToggle}
         onDelete={handleDelete}
       />

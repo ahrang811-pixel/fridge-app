@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ALL_CATEGORY_ID, CategoryFilterBar } from './CategoryFilterBar'
+import { ALL_CATEGORY_ID, CategoryFilterBar } from '../../components/CategoryFilterBar'
 import { IngredientForm } from './IngredientForm'
 import { IngredientList } from './IngredientList'
 import { ReceiptScanFlow } from './receipt/ReceiptScanFlow'
